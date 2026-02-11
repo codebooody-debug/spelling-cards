@@ -1,88 +1,120 @@
-// 图片缓存服务 - 使用 localStorage 存储 base64 图片
-const CACHE_KEY_PREFIX = 'word_image_';
-const MAX_CACHE_SIZE = 50; // 最多缓存50张图片
+// 图片缓存服务 - 使用 IndexedDB 存储 base64 图片
+// 替代原有的 localStorage 方案（解决 5MB 限制问题）
+
+import { openDB } from 'idb';
+
+const DB_NAME = 'spelling-cards-cache';
+const DB_VERSION = 1;
+const STORE_NAME = 'word-images';
+const MAX_CACHE_SIZE = 100; // 最多缓存 100 张图片
+const CACHE_EXPIRY_DAYS = 30; // 缓存 30 天
+
+// 初始化 IndexedDB
+const initDB = async () => {
+  return openDB(DB_NAME, DB_VERSION, {
+    upgrade(db) {
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        const store = db.createObjectStore(STORE_NAME, { keyPath: 'word' });
+        store.createIndex('timestamp', 'timestamp', { unique: false });
+      }
+    }
+  });
+};
 
 // 获取缓存的图片
-export function getCachedImage(word) {
+export async function getCachedImage(word) {
   try {
-    const key = CACHE_KEY_PREFIX + word.toLowerCase();
+    const db = await initDB();
+    const data = await db.get(STORE_NAME, word.toLowerCase());
+    
+    if (!data) return null;
+    
+    // 检查是否过期
+    const isExpired = Date.now() - data.timestamp > CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+    if (isExpired) {
+      await db.delete(STORE_NAME, word.toLowerCase());
+      console.log(`🗑️ 缓存已过期，删除: ${word}`);
+      return null;
+    }
+    
+    console.log(`📦 从 IndexedDB 加载图片: ${word}`);
+    return data.imageUrl;
+  } catch (error) {
+    console.error('读取 IndexedDB 失败:', error);
+    // Fallback 到 localStorage
+    return getCachedImageFallback(word);
+  }
+}
+
+// Fallback: localStorage
+function getCachedImageFallback(word) {
+  try {
+    const key = 'word_image_' + word.toLowerCase();
     const cached = localStorage.getItem(key);
     if (cached) {
       const data = JSON.parse(cached);
-      // 检查是否过期（30天）
       const isExpired = Date.now() - data.timestamp > 30 * 24 * 60 * 60 * 1000;
-      if (!isExpired) {
-        console.log(`📦 从缓存加载图片: ${word}`);
-        return data.imageUrl;
-      }
-      // 过期则删除
+      if (!isExpired) return data.imageUrl;
       localStorage.removeItem(key);
     }
   } catch (error) {
-    console.error('读取缓存失败:', error);
+    console.error('Fallback 读取失败:', error);
   }
   return null;
 }
 
 // 保存图片到缓存
-export function saveImageToCache(word, imageUrl) {
+export async function saveImageToCache(word, imageUrl) {
   try {
-    const key = CACHE_KEY_PREFIX + word.toLowerCase();
-    const data = {
+    const db = await initDB();
+    
+    // 检查缓存数量，如果超过限制则删除最旧的
+    await cleanupOldCache(db);
+    
+    await db.put(STORE_NAME, {
+      word: word.toLowerCase(),
+      imageUrl,
+      timestamp: Date.now()
+    });
+    
+    console.log(`💾 图片已缓存到 IndexedDB: ${word}`);
+  } catch (error) {
+    console.error('保存到 IndexedDB 失败:', error);
+    // Fallback 到 localStorage
+    saveImageToCacheFallback(word, imageUrl);
+  }
+}
+
+// Fallback: localStorage
+function saveImageToCacheFallback(word, imageUrl) {
+  try {
+    const key = 'word_image_' + word.toLowerCase();
+    localStorage.setItem(key, JSON.stringify({
       imageUrl,
       timestamp: Date.now(),
       word: word.toLowerCase()
-    };
-    
-    // 检查缓存数量，如果超过限制则删除最旧的
-    cleanupOldCache();
-    
-    localStorage.setItem(key, JSON.stringify(data));
-    console.log(`💾 图片已缓存: ${word}`);
+    }));
   } catch (error) {
-    // 可能是存储空间不足
     if (error.name === 'QuotaExceededError') {
-      console.warn('缓存空间不足，清理旧缓存...');
-      cleanupOldCache(true); // 强制清理一半缓存
-      try {
-        const key = CACHE_KEY_PREFIX + word.toLowerCase();
-        localStorage.setItem(key, JSON.stringify({
-          imageUrl,
-          timestamp: Date.now(),
-          word: word.toLowerCase()
-        }));
-      } catch (e) {
-        console.error('缓存失败:', e);
-      }
-    } else {
-      console.error('保存缓存失败:', error);
+      console.warn('localStorage 空间不足');
     }
   }
 }
 
 // 清理旧缓存
-function cleanupOldCache(aggressive = false) {
+async function cleanupOldCache(db) {
   try {
-    const images = [];
-    
-    // 收集所有缓存的图片
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(CACHE_KEY_PREFIX)) {
-        const data = JSON.parse(localStorage.getItem(key));
-        images.push({ key, ...data });
+    const count = await db.count(STORE_NAME);
+    if (count >= MAX_CACHE_SIZE) {
+      // 获取最旧的缓存
+      const oldItems = await db.getAllFromIndex(STORE_NAME, 'timestamp', undefined, MAX_CACHE_SIZE - 10);
+      if (oldItems.length > 0) {
+        const deleteCount = oldItems.length - (MAX_CACHE_SIZE - 10);
+        for (let i = 0; i < deleteCount; i++) {
+          await db.delete(STORE_NAME, oldItems[i].word);
+          console.log(`🗑️ 清理旧缓存: ${oldItems[i].word}`);
+        }
       }
-    }
-    
-    // 按时间排序
-    images.sort((a, b) => a.timestamp - b.timestamp);
-    
-    // 删除最旧的
-    const deleteCount = aggressive ? Math.floor(images.length / 2) : Math.max(0, images.length - MAX_CACHE_SIZE);
-    
-    for (let i = 0; i < deleteCount; i++) {
-      localStorage.removeItem(images[i].key);
-      console.log(`🗑️ 清理旧缓存: ${images[i].word}`);
     }
   } catch (error) {
     console.error('清理缓存失败:', error);
@@ -90,45 +122,68 @@ function cleanupOldCache(aggressive = false) {
 }
 
 // 清除所有图片缓存
-export function clearAllImageCache() {
+export async function clearAllImageCache() {
+  try {
+    const db = await initDB();
+    await db.clear(STORE_NAME);
+    console.log('🧹 已清除所有 IndexedDB 图片缓存');
+  } catch (error) {
+    console.error('清除 IndexedDB 失败:', error);
+  }
+  
+  // 同时清除 localStorage fallback
   try {
     const keysToRemove = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith(CACHE_KEY_PREFIX)) {
+      if (key && key.startsWith('word_image_')) {
         keysToRemove.push(key);
       }
     }
     keysToRemove.forEach(key => localStorage.removeItem(key));
-    console.log(`🧹 已清除 ${keysToRemove.length} 个缓存图片`);
+    console.log(`🧹 已清除 ${keysToRemove.length} 个 localStorage 缓存图片`);
   } catch (error) {
-    console.error('清除缓存失败:', error);
+    console.error('清除 localStorage 失败:', error);
   }
 }
 
 // 获取缓存统计
-export function getCacheStats() {
+export async function getCacheStats() {
   try {
-    let count = 0;
-    let oldestTimestamp = Date.now();
+    const db = await initDB();
+    const count = await db.count(STORE_NAME);
     
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && key.startsWith(CACHE_KEY_PREFIX)) {
-        count++;
-        const data = JSON.parse(localStorage.getItem(key));
-        if (data.timestamp < oldestTimestamp) {
-          oldestTimestamp = data.timestamp;
-        }
-      }
-    }
+    // 获取最旧的缓存日期
+    const allItems = await db.getAllFromIndex(STORE_NAME, 'timestamp');
+    const oldestItem = allItems[0];
     
     return {
       count,
       maxSize: MAX_CACHE_SIZE,
-      oldestDate: count > 0 ? new Date(oldestTimestamp).toLocaleDateString() : '-'
+      oldestDate: oldestItem ? new Date(oldestItem.timestamp).toLocaleDateString() : '-',
+      storage: 'IndexedDB'
+    };
+  } catch (error) {
+    console.error('获取缓存统计失败:', error);
+    return getCacheStatsFallback();
+  }
+}
+
+// Fallback: localStorage 统计
+function getCacheStatsFallback() {
+  try {
+    let count = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('word_image_')) count++;
+    }
+    return {
+      count,
+      maxSize: 50,
+      oldestDate: '-',
+      storage: 'localStorage (fallback)'
     };
   } catch {
-    return { count: 0, maxSize: MAX_CACHE_SIZE, oldestDate: '-' };
+    return { count: 0, maxSize: MAX_CACHE_SIZE, oldestDate: '-', storage: 'unknown' };
   }
 }

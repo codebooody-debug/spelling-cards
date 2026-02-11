@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { ArrowLeft, Check, Edit2, Sparkles, Loader2, School, Calendar, Hash, Type, BookOpen } from 'lucide-react';
 import { useState } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { enrichWordsBatch } from '../services/api';
 
 export default function ConfirmPage() {
   const location = useLocation();
@@ -51,70 +51,20 @@ export default function ConfirmPage() {
     setIsGenerating(true);
 
     try {
-      // 并行调用 Gemini 为每个单词生成丰富信息
-      const enrichmentPromises = extractedSentences.map(async (item) => {
-        try {
-          let result;
-          
-          if (isSupabaseConfigured()) {
-            // 使用 Supabase Edge Function (直接调用)
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
-            
-            const edgeResponse = await fetch(
-              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/enrich-word`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  word: item.word,
-                  sentence: item.sentence,
-                  grade: editableData.grade
-                }),
-                signal: controller.signal
-              }
-            );
-            clearTimeout(timeoutId);
-            
-            if (!edgeResponse.ok) {
-              const errorText = await edgeResponse.text();
-              throw new Error(`Edge Function error: ${errorText}`);
-            }
-            result = await edgeResponse.json();
-          } else {
-            // 本地开发模式
-            const response = await fetch('http://localhost:3003/api/enrich-word', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                word: item.word,
-                sentence: item.sentence,
-                grade: editableData.grade
-              })
-            });
-            result = await response.json();
+      // 使用批量处理 API，限制并发数为 3
+      const enrichedResults = await enrichWordsBatch(
+        extractedSentences.map(item => ({
+          word: item.word,
+          sentence: item.sentence
+        })),
+        editableData.grade,
+        {
+          concurrency: 3,
+          onProgress: (word, success) => {
+            console.log(`单词 ${word} 处理${success ? '成功' : '失败'}`);
           }
-          
-          if (result.success) {
-            return result.data;
-          }
-          throw new Error(result.error);
-        } catch (error) {
-          console.error(`丰富单词 ${item.word} 失败:`, error);
-          // 失败时返回默认数据
-          return {
-            meaning: '',
-            wordType: 'noun',
-            synonyms: [],
-            antonyms: [],
-            practiceSentences: [],
-            memoryTip: ''
-          };
         }
-      });
-      
-      // 等待所有单词信息生成完成
-      const enrichedWords = await Promise.all(enrichmentPromises);
+      );
       
       // 组合数据
       const items = extractedSentences.map((item, index) => ({
@@ -123,7 +73,7 @@ export default function ConfirmPage() {
         sentence: item.sentence,
         blanked_sentence: item.blanked,
         phonetic: '/fəˈnetɪk/',
-        ...enrichedWords[index]
+        ...enrichedResults[index].data
       }));
 
       const newRecord = await createStudyRecord({
@@ -145,7 +95,7 @@ export default function ConfirmPage() {
       navigate(`/study/${newRecord.id}`);
     } catch (error) {
       console.error('生成失败:', error);
-      alert('生成学习卡片失败，请重试');
+      alert('生成学习卡片失败: ' + error.message);
       setIsGenerating(false);
     }
   };

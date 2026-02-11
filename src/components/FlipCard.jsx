@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Volume2, HelpCircle, Loader2, ImageIcon } from 'lucide-react';
 import { getCachedImage, saveImageToCache } from '../services/imageCache';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { generateImage } from '../services/api';
 
 function FlipCard({ item, ttsProvider, availableProviders, flippedAll }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -23,95 +23,64 @@ function FlipCard({ item, ttsProvider, availableProviders, flippedAll }) {
   }, [flippedAll]);
 
   useEffect(() => {
-    const word = item.target_word;
-    const cachedImage = getCachedImage(word);
-    if (cachedImage) {
-      setWordImage(cachedImage);
+    const loadCachedImage = async () => {
+      const word = item.target_word;
+      const cachedImage = await getCachedImage(word);
+      if (cachedImage) {
+        setWordImage(cachedImage);
+        hasGeneratedRef.current = true;
+        return;
+      }
+      
+      if (hasGeneratedRef.current || isGeneratingImage) return;
+      
       hasGeneratedRef.current = true;
-      return;
-    }
-    
-    if (hasGeneratedRef.current || isGeneratingImage) return;
-    
-    hasGeneratedRef.current = true;
-    setIsGeneratingImage(true);
-    setImageError(null);
-    
-    // 用于取消请求的 AbortController
-    const abortController = new AbortController();
-    
-    const generateWordImage = async () => {
-      try {
-        const sentence = item.sentence || '';
-        const prompt = `Simple, clean illustration depicting "${word}" based on this context: "${sentence}". 
+      setIsGeneratingImage(true);
+      setImageError(null);
+      
+      // 用于取消请求的 AbortController
+      const abortController = new AbortController();
+      
+      const generateWordImage = async () => {
+        try {
+          const sentence = item.sentence || '';
+          const prompt = `Simple, clean illustration depicting "${word}" based on this context: "${sentence}". 
 Minimal design with one clear focal point. 
 Soft pastel colors, white background, no text, no cluttered elements. 
 Focus on showing the exact meaning of the word in a clear, uncluttered scene suitable for children to understand.`;
-        
-        let data;
-        
-        if (isSupabaseConfigured()) {
-          // 使用 Supabase Edge Function (直接调用)
-          const timeoutId = setTimeout(() => abortController.abort(), 20000); // 20秒超时
           
-          const edgeResponse = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ prompt, width: 1024, height: 1024 }),
-              signal: abortController.signal
-            }
-          );
-          clearTimeout(timeoutId);
+          const data = await generateImage(prompt, 1024, 1024);
           
-          if (!edgeResponse.ok) {
-            const errorText = await edgeResponse.text();
-            throw new Error(`Edge Function error: ${errorText}`);
-          }
-          data = await edgeResponse.json();
-        } else {
-          // 本地开发模式
-          const response = await fetch('http://localhost:3003/api/generate-image', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt, width: 1024, height: 1024 }),
-            signal: abortController.signal
-          });
-          data = await response.json();
-        }
-        
-        // 如果请求被取消，不更新状态
-        if (abortController.signal.aborted) return;
-        
-        if (data.success && data.imageBase64) {
+          // 如果请求被取消，不更新状态
+          if (abortController.signal.aborted) return;
+          
           const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
           setWordImage(imageUrl);
-          saveImageToCache(word, imageUrl);
+          await saveImageToCache(word, imageUrl);
           console.log(`✅ 图片生成并缓存成功: ${word}`);
-        } else {
-          throw new Error(data.error || '图片生成失败');
+        } catch (error) {
+          // 如果请求被取消，不显示错误
+          if (error.name === 'AbortError') {
+            console.log(`🚫 图片生成请求已取消: ${word}`);
+            return;
+          }
+          console.error(`❌ 图片生成失败 (${word}):`, error.message);
+          setImageError(error.message);
+          hasGeneratedRef.current = false;
+        } finally {
+          setIsGeneratingImage(false);
         }
-      } catch (error) {
-        // 如果请求被取消，不显示错误
-        if (error.name === 'AbortError') {
-          console.log(`🚫 图片生成请求已取消: ${word}`);
-          return;
-        }
-        console.error(`❌ 图片生成失败 (${word}):`, error.message);
-        setImageError(error.message);
-        hasGeneratedRef.current = false;
-      } finally {
-        setIsGeneratingImage(false);
-      }
+      };
+      
+      generateWordImage();
+      
+      // Cleanup 函数：组件卸载时取消请求
+      return () => {
+        abortController.abort();
+      };
     };
     
-    generateWordImage();
-    
-    // Cleanup 函数：组件卸载时取消请求
-    return () => {
-      abortController.abort();
-    };
+    loadCachedImage();
   }, [item.target_word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateGoogleAudio = useCallback(async (text) => {
