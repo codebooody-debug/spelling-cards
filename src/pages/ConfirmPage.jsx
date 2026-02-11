@@ -57,16 +57,24 @@ export default function ConfirmPage() {
           let result;
           
           if (isSupabaseConfigured()) {
-            // 使用 Supabase Edge Function
-            const { data, error } = await supabase.functions.invoke('enrich-word', {
-              body: {
-                word: item.word,
-                sentence: item.sentence,
-                grade: editableData.grade
+            // 使用 Supabase Edge Function (直接调用)
+            const edgeResponse = await fetch(
+              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/enrich-word`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  word: item.word,
+                  sentence: item.sentence,
+                  grade: editableData.grade
+                })
               }
-            });
-            if (error) throw error;
-            result = data;
+            );
+            if (!edgeResponse.ok) {
+              const errorText = await edgeResponse.text();
+              throw new Error(`Edge Function error: ${errorText}`);
+            }
+            result = await edgeResponse.json();
           } else {
             // 本地开发模式
             const response = await fetch('http://localhost:3003/api/enrich-word', {
