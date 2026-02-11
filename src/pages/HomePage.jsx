@@ -82,11 +82,30 @@ export default function HomePage() {
       
       let response;
       if (isSupabaseConfigured()) {
-        // 使用 Supabase Edge Function
-        response = await supabase.functions.invoke('extract-spelling', {
-          body: { imageData }
-        });
-        if (response.error) throw new Error(response.error.message);
+        // 使用 Supabase Edge Function (直接调用，不需要登录)
+        try {
+          const edgeResponse = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-spelling`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ imageData })
+            }
+          );
+          if (!edgeResponse.ok) {
+            const errorText = await edgeResponse.text();
+            throw new Error(`Edge Function error: ${errorText}`);
+          }
+          response = { data: await edgeResponse.json() };
+        } catch (edgeError) {
+          console.log('Edge Function failed, trying local proxy:', edgeError.message);
+          // Fallback to local proxy
+          response = await fetch('http://localhost:3003/api/extract-spelling', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageData })
+          }).then(r => r.json());
+        }
       } else {
         // 本地开发模式
         response = await fetch('http://localhost:3003/api/extract-spelling', {

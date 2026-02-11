@@ -48,12 +48,20 @@ Focus on showing the exact meaning of the word in a clear, uncluttered scene sui
         let data;
         
         if (isSupabaseConfigured()) {
-          // 使用 Supabase Edge Function
-          const { data: responseData, error } = await supabase.functions.invoke('generate-image', {
-            body: { prompt, width: 1024, height: 1024 }
-          });
-          if (error) throw error;
-          data = responseData;
+          // 使用 Supabase Edge Function (直接调用)
+          const edgeResponse = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ prompt, width: 1024, height: 1024 })
+            }
+          );
+          if (!edgeResponse.ok) {
+            const errorText = await edgeResponse.text();
+            throw new Error(`Edge Function error: ${errorText}`);
+          }
+          data = await edgeResponse.json();
         } else {
           // 本地开发模式
           const response = await fetch('http://localhost:3003/api/generate-image', {
