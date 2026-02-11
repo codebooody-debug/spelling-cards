@@ -1,0 +1,112 @@
+const express = require('express');
+const cors = require('cors');
+const fetch = require('node-fetch');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+// 提供静态文件
+app.use(express.static(path.join(__dirname, '../dist')));
+
+const PORT = process.env.PORT || 3001;
+const MINIMAX_API_KEY = process.env.MINIMAX_API_KEY;
+
+// TTS 代理接口 - 修正版 (MiniMax API v2)
+app.post('/api/tts', async (req, res) => {
+  if (!MINIMAX_API_KEY) {
+    return res.status(500).json({ 
+      error: 'MINIMAX_API_KEY not configured',
+      message: '请在 .env 文件中设置 MINIMAX_API_KEY'
+    });
+  }
+
+  const { text, voice_id = 'male-qn-qingse', speed = 0.8 } = req.body;
+  
+  if (!text) {
+    return res.status(400).json({ error: 'text is required' });
+  }
+
+  try {
+    const response = await fetch('https://api.minimaxi.chat/v1/t2a_v2', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${MINIMAX_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'speech-01-turbo',
+        text: text,
+        voice_setting: {
+          voice_id: voice_id,
+          speed: speed,
+          vol: 1.0
+        },
+        audio_setting: {
+          sample_rate: 32000,
+          bitrate: 128000,
+          format: 'mp3'
+        }
+      })
+    });
+
+    const data = await response.json();
+    
+    // 检查 API 返回状态
+    if (data.base_resp?.status_code !== 0) {
+      return res.status(400).json({
+        success: false,
+        error: data.base_resp?.status_msg || 'API Error',
+        code: data.base_resp?.status_code
+      });
+    }
+    
+    // 处理音频数据
+    if (data.data?.audio) {
+      // MiniMax 返回的是十六进制字符串，需要转换为 base64
+      const hexString = data.data.audio;
+      const buffer = Buffer.from(hexString, 'hex');
+      const base64Audio = buffer.toString('base64');
+      
+      // 记录使用量
+      const usage = data.extra_info || {};
+      console.log(`🎙️ TTS 请求: "${text.substring(0, 30)}${text.length > 30 ? '...' : ''}"`);
+      console.log(`   📊 字符数: ${usage.usage_characters || 'N/A'} | 音频时长: ${usage.audio_length}ms | 文件大小: ${usage.audio_size} bytes`);
+      
+      return res.json({
+        success: true,
+        audio_base64: base64Audio,
+        format: 'mp3',
+        extra_info: data.extra_info
+      });
+    }
+    
+    return res.status(400).json({
+      success: false,
+      error: 'No audio data received'
+    });
+    
+  } catch (error) {
+    console.error('TTS Error:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// 健康检查
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    tts_configured: !!MINIMAX_API_KEY
+  });
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 MiniMax TTS Proxy + 静态文件服务器 running on http://localhost:${PORT}`);
+  console.log(`🎨 打开 http://localhost:${PORT} 查看应用`);
+  console.log(`🔑 API Key configured: ${MINIMAX_API_KEY ? 'Yes' : 'No'}`);
+});

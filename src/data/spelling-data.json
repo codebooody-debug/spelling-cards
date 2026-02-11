@@ -1,0 +1,276 @@
+{
+  "title": "QIFA P3 2026 - Term 1 Spelling (6)",
+  "subtitle": "Commonly Misspelled Words",
+  "created_at": "2026-02-04",
+  "total_items": 10,
+  "items": [
+    {
+      "id": 1,
+      "target_word": "souvenir",
+      "sentence": "My parents bought me a kangaroo soft toy as a souvenir during our recent trip to Australia.",
+      "blanked_sentence": "My parents bought me a kangaroo soft toy as a ________ during our recent trip to Australia.",
+      "phonetic": "/ˌsuːvəˈnɪr/",
+      "meaning": "纪念品；纪念物",
+      "word_type": "noun",
+      "example": "I bought a keychain as a souvenir from Paris.",
+      "practice_sentences": [
+        "I always bring back a special ________ when I travel to a new city.",
+        "The small shop sells handmade ________ that remind tourists of their visit."
+      ],
+      "synonyms": [
+        "keepsake",
+        "memento",
+        "remembrance"
+      ],
+      "antonyms": [],
+      "memory_tip": "来自法语 souvenir（记得），旅行时记得买的东西就是纪念品",
+      "image_placeholder": "placeholder_souvenir.svg",
+      "difficulty": "hard"
+    },
+    {
+      "id": 2,
+      "target_word": "thoroughly",
+      "sentence": "The students were reminded to check their work thoroughly to avoid careless mistakes.",
+      "blanked_sentence": "The students were reminded to check their work ________ to avoid careless mistakes.",
+      "phonetic": "/ˈθʌrəli/",
+      "meaning": "彻底地；仔细地；完全地",
+      "word_type": "adverb",
+      "example": "Please read the instructions thoroughly before starting.",
+      "practice_sentences": [
+        "You should clean your room ________ before your parents come home.",
+        "The doctor checked the patient ________ to make sure everything was fine."
+      ],
+      "synonyms": [
+        "completely",
+        "carefully",
+        "fully",
+        "entirely"
+      ],
+      "antonyms": [
+        "carelessly",
+        "partially",
+        "halfheartedly"
+      ],
+      "memory_tip": "thorough（彻底的）+ ly（副词后缀）= 彻底地",
+      "image_placeholder": "placeholder_thoroughly.svg",
+      "difficulty": "medium"
+    },
+    {
+      "id": 3,
+      "target_word": "jealousy",
+      "sentence": "Overwhelmed by jealousy, Jane tore her sister's favourite story book.",
+      "blanked_sentence": "Overwhelmed by ________, Jane tore her sister's favourite story book.",
+      "phonetic": "/ˈdʒeləsi/",
+      "meaning": "嫉妒；妒忌",
+      "word_type": "noun",
+      "example": "His jealousy made him say things he regretted.",
+      "synonyms": [
+        "envy",
+        "resentment",
+        "covetousness"
+      ],
+      "antonyms": [
+        "contentment",
+        "generosity",
+        "admiration"
+      ],
+      "memory_tip": "jealous（嫉妒的）+ y（名词后缀）= 嫉妒",
+      "image_placeholder": "placeholder_jealousy.svg",
+      "difficulty": "medium",
+      "practice_sentences": [
+        "Tom felt a pang of ________ when he saw his friend's new toy.",
+        "Her ________ towards her sister's success was obvious to everyone."
+      ]
+    },
+    {
+      "id": 4,
+      "target_word": "announcement",
+      "sentence": "An announcement was made to remind the class monitors to attend the afternoon's briefing.",
+      "blanked_sentence": "An ________ was made to remind the class monitors to attend the afternoon's briefing.",
+      "phonetic": "/əˈnaʊnsmənt/",
+      "meaning": "公告；宣告；通知",
+      "word_type": "noun",
+      "example": "The school made an announcement about the holiday schedule.",
+      "synonyms": [
+        "notice",
+        "declaration",
+        "proclamation",
+        "statement"
+      ],
+      "antonyms": [
+        "secret",
+        "concealment"
+      ],
+      "memory_tip": "announce（宣布）+ ment（名词后缀）= 公告",
+      "image_placeholder": "placeholder_announcement.svg",
+      "difficulty": "medium",
+      "practice_sentences": [
+        "The principal made an important ________ about the school trip.",
+        "We are waiting for the official ________ of the competition results."
+      ]
+    },
+    {
+      "id": 5,
+      "target_word": "especially",
+      "sentence": "My brother enjoys eating fruits, especially strawberries.",
+      "blanked_sentence": "My brother enjoys eating fruits, ________ strawberries.",
+      "phonetic": "/ɪˈspeʃəli/",
+      "meaning": "特别；尤其；格外",
+      "word_type": "adverb",
+      "example": "I love all sports, especially basketball.",
+      "synonyms": [
+        "particularly",
+        "specifically",
+        "notably"
+      ],
+      "antonyms": [
+        "generally",
+        "ordinarily"
+      ],
+      "memory_tip": "e + special（特别的）+ ly = 特别地",
+      "image_placeholder": "placeholder_especially.svg",
+      "difficulty": "easy",
+      "practice_sentences": [
+        "I love all animals, ________ dogs and cats.",
+        "You should eat more vegetables, ________ green leafy ones."
+      ]
+    },
+    {
+      "id": 6,
+      "target_word": "committee",
+      "sentence": "A committee has been set up to promote healthy eating among the children.",
+      "blanked_sentence": "A ________ has been set up to promote healthy eating among the children.",
+      "phonetic": "/kəˈmɪti/",
+      "meaning": "委员会",
+      "word_type": "noun",
+      "example": "The school committee meets every month.",
+      "synonyms": [
+        "council",
+        "board",
+        "panel",
+        "commission"
+      ],
+      "antonyms": [],
+      "memory_tip": "注意拼写：双写 m 和 t，但只有一个 e 结尾",
+      "image_placeholder": "placeholder_committee.svg",
+      "difficulty": "hard",
+      "practice_sentences": [
+        "The school ________ decided to organize a charity event.",
+        "She was elected to serve on the student ________ this year."
+      ]
+    },
+    {
+      "id": 7,
+      "target_word": "succeed",
+      "sentence": "In order to succeed in finishing the marathon in record time, Tom has been practising hard for the past two years.",
+      "blanked_sentence": "In order to ________ in finishing the marathon in record time, Tom has been practising hard for the past two years.",
+      "phonetic": "/səkˈsiːd/",
+      "meaning": "成功；达成；接替",
+      "word_type": "verb",
+      "example": "If you work hard, you will succeed.",
+      "synonyms": [
+        "achieve",
+        "accomplish",
+        "triumph",
+        "prosper"
+      ],
+      "antonyms": [
+        "fail",
+        "lose",
+        "give up"
+      ],
+      "memory_tip": "suc-（在下面）+ ceed（走）= 从下面走上来 = 成功",
+      "image_placeholder": "placeholder_succeed.svg",
+      "difficulty": "medium",
+      "practice_sentences": [
+        "If you practice every day, you will ________ in learning the piano.",
+        "Hard work is the key to ________ in any field."
+      ]
+    },
+    {
+      "id": 8,
+      "target_word": "acceptable",
+      "sentence": "All students are to treat their classmates with care and respect and teasing and laughing at peers is not acceptable.",
+      "blanked_sentence": "All students are to treat their classmates with care and respect and teasing and laughing at peers is not ________.",
+      "phonetic": "/əkˈseptəbl/",
+      "meaning": "可接受的；合意的；受欢迎的",
+      "word_type": "adjective",
+      "example": "Your work is acceptable, but you can do better.",
+      "synonyms": [
+        "permissible",
+        "tolerable",
+        "satisfactory",
+        "adequate"
+      ],
+      "antonyms": [
+        "unacceptable",
+        "intolerable",
+        "inadequate"
+      ],
+      "memory_tip": "accept（接受）+ able（能够）= 能够被接受的",
+      "image_placeholder": "placeholder_acceptable.svg",
+      "difficulty": "medium",
+      "practice_sentences": [
+        "Wearing casual clothes is ________ on Fridays at our office.",
+        "Your apology is ________, but please don't do it again."
+      ]
+    },
+    {
+      "id": 9,
+      "target_word": "brilliant",
+      "sentence": "It is a brilliant idea to kickstart a newspaper collection programme in schools so as to raise more awareness about recycling.",
+      "blanked_sentence": "It is a ________ idea to kickstart a newspaper collection programme in schools so as to raise more awareness about recycling.",
+      "phonetic": "/ˈbrɪliənt/",
+      "meaning": "灿烂的；杰出的；巧妙的；非常聪明的",
+      "word_type": "adjective",
+      "example": "She had a brilliant idea for the project.",
+      "synonyms": [
+        "excellent",
+        "outstanding",
+        "magnificent",
+        "exceptional",
+        "intelligent"
+      ],
+      "antonyms": [
+        "dull",
+        "mediocre",
+        "terrible"
+      ],
+      "memory_tip": "brilli（发光）+ ant = 发光的 = 杰出的",
+      "image_placeholder": "placeholder_brilliant.svg",
+      "difficulty": "medium",
+      "practice_sentences": [
+        "She came up with a ________ idea to solve the problem.",
+        "The scientist made a ________ discovery that changed medicine."
+      ]
+    },
+    {
+      "id": 10,
+      "target_word": "suggestion",
+      "sentence": "The suggestion of having a community library was well-received by the residents.",
+      "blanked_sentence": "The ________ of having a community library was well-received by the residents.",
+      "phonetic": "/səˈdʒestʃən/",
+      "meaning": "建议；提议；暗示",
+      "word_type": "noun",
+      "example": "Do you have any suggestions for improvement?",
+      "synonyms": [
+        "proposal",
+        "recommendation",
+        "advice",
+        "idea"
+      ],
+      "antonyms": [
+        "order",
+        "command",
+        "demand"
+      ],
+      "memory_tip": "suggest（建议）+ ion（名词后缀）= 建议",
+      "image_placeholder": "placeholder_suggestion.svg",
+      "difficulty": "medium",
+      "practice_sentences": [
+        "Do you have any ________ for improving our classroom?",
+        "Her ________ to start a book club was well received by the class."
+      ]
+    }
+  ]
+}
