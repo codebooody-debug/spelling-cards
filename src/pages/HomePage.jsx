@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../components/Toast';
 import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { extractSpelling } from '../services/api';
@@ -7,6 +8,7 @@ import { extractSpelling } from '../services/api';
 export default function HomePage() {
   const navigate = useNavigate();
   const { studyRecords, deleteStudyRecord, isLoading } = useApp();
+  const { success, error: showError } = useToast();
 
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -64,11 +66,11 @@ export default function HomePage() {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      alert('请选择图片文件');
+      showError('请选择图片文件');
       return;
     }
     if (file.size > 10 * 1024 * 1024) {
-      alert('图片大小不能超过 10MB');
+      showError('图片大小不能超过 10MB');
       return;
     }
 
@@ -142,9 +144,9 @@ export default function HomePage() {
       };
 
       navigate('/confirm', { state: { recognizedData } });
-    } catch (error) {
-      console.error('❌ 识别失败:', error);
-      alert('图片识别失败: ' + error.message);
+    } catch (err) {
+      console.error('❌ 识别失败:', err);
+      showError('图片识别失败: ' + err.message);
       setIsProcessing(false);
     }
   };
@@ -167,15 +169,16 @@ export default function HomePage() {
     if (files.length > 0 && files[0].type.startsWith('image/')) {
       handleFileSelect({ target: { files } });
     } else {
-      alert('请上传图片文件');
+      showError('请上传图片文件');
     }
-  }, []);
+  }, [showError]);
 
   // 删除
   const handleDelete = (e, recordId) => {
     e.stopPropagation();
     if (confirm('确定要删除这个听写记录吗？')) {
       deleteStudyRecord(recordId);
+      success('记录已删除');
     }
   };
 
