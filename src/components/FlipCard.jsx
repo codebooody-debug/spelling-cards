@@ -37,6 +37,9 @@ function FlipCard({ item, ttsProvider, availableProviders, flippedAll }) {
     setIsGeneratingImage(true);
     setImageError(null);
     
+    // 用于取消请求的 AbortController
+    const abortController = new AbortController();
+    
     const generateWordImage = async () => {
       try {
         const sentence = item.sentence || '';
@@ -49,14 +52,19 @@ Focus on showing the exact meaning of the word in a clear, uncluttered scene sui
         
         if (isSupabaseConfigured()) {
           // 使用 Supabase Edge Function (直接调用)
+          const timeoutId = setTimeout(() => abortController.abort(), 20000); // 20秒超时
+          
           const edgeResponse = await fetch(
             `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-image`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ prompt, width: 1024, height: 1024 })
+              body: JSON.stringify({ prompt, width: 1024, height: 1024 }),
+              signal: abortController.signal
             }
           );
+          clearTimeout(timeoutId);
+          
           if (!edgeResponse.ok) {
             const errorText = await edgeResponse.text();
             throw new Error(`Edge Function error: ${errorText}`);
@@ -67,10 +75,14 @@ Focus on showing the exact meaning of the word in a clear, uncluttered scene sui
           const response = await fetch('http://localhost:3003/api/generate-image', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt, width: 1024, height: 1024 })
+            body: JSON.stringify({ prompt, width: 1024, height: 1024 }),
+            signal: abortController.signal
           });
           data = await response.json();
         }
+        
+        // 如果请求被取消，不更新状态
+        if (abortController.signal.aborted) return;
         
         if (data.success && data.imageBase64) {
           const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
@@ -81,6 +93,11 @@ Focus on showing the exact meaning of the word in a clear, uncluttered scene sui
           throw new Error(data.error || '图片生成失败');
         }
       } catch (error) {
+        // 如果请求被取消，不显示错误
+        if (error.name === 'AbortError') {
+          console.log(`🚫 图片生成请求已取消: ${word}`);
+          return;
+        }
         console.error(`❌ 图片生成失败 (${word}):`, error.message);
         setImageError(error.message);
         hasGeneratedRef.current = false;
@@ -90,6 +107,11 @@ Focus on showing the exact meaning of the word in a clear, uncluttered scene sui
     };
     
     generateWordImage();
+    
+    // Cleanup 函数：组件卸载时取消请求
+    return () => {
+      abortController.abort();
+    };
   }, [item.target_word]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateGoogleAudio = useCallback(async (text) => {

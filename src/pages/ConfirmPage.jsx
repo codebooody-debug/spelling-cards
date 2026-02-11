@@ -58,6 +58,9 @@ export default function ConfirmPage() {
           
           if (isSupabaseConfigured()) {
             // 使用 Supabase Edge Function (直接调用)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
+            
             const edgeResponse = await fetch(
               `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/enrich-word`,
               {
@@ -67,9 +70,12 @@ export default function ConfirmPage() {
                   word: item.word,
                   sentence: item.sentence,
                   grade: editableData.grade
-                })
+                }),
+                signal: controller.signal
               }
             );
+            clearTimeout(timeoutId);
+            
             if (!edgeResponse.ok) {
               const errorText = await edgeResponse.text();
               throw new Error(`Edge Function error: ${errorText}`);
