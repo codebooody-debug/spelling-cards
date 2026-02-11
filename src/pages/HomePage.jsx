@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function HomePage() {
@@ -12,28 +12,32 @@ export default function HomePage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef(null);
 
-  // 按 Term 分组
-  const groupedByTerm = studyRecords.reduce((groups, record) => {
-    const termKey = `${record.grade}-${record.term}`;
-    if (!groups[termKey]) {
-      groups[termKey] = {
-        grade: record.grade,
-        term: record.term,
-        records: []
-      };
-    }
-    groups[termKey].records.push(record);
-    return groups;
-  }, {});
+  // 按 Term 分组 - 使用 useMemo 优化性能
+  const groupedByTerm = useMemo(() => {
+    return studyRecords.reduce((groups, record) => {
+      const termKey = `${record.grade}-${record.term}`;
+      if (!groups[termKey]) {
+        groups[termKey] = {
+          grade: record.grade,
+          term: record.term,
+          records: []
+        };
+      }
+      groups[termKey].records.push(record);
+      return groups;
+    }, {});
+  }, [studyRecords]);
 
-  // 排序
-  const sortedTermGroups = Object.values(groupedByTerm).sort((a, b) => {
-    const gradeOrder = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
-    const gradeDiff = gradeOrder.indexOf(a.grade) - gradeOrder.indexOf(b.grade);
-    if (gradeDiff !== 0) return gradeDiff;
-    const termOrder = ['Term 1', 'Term 2', 'Term 3', 'Term 4'];
-    return termOrder.indexOf(a.term) - termOrder.indexOf(b.term);
-  });
+  // 排序 - 使用 useMemo 优化性能
+  const sortedTermGroups = useMemo(() => {
+    return Object.values(groupedByTerm).sort((a, b) => {
+      const gradeOrder = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
+      const gradeDiff = gradeOrder.indexOf(a.grade) - gradeOrder.indexOf(b.grade);
+      if (gradeDiff !== 0) return gradeDiff;
+      const termOrder = ['Term 1', 'Term 2', 'Term 3', 'Term 4'];
+      return termOrder.indexOf(a.term) - termOrder.indexOf(b.term);
+    });
+  }, [groupedByTerm]);
 
   const hasRecords = studyRecords.length > 0;
 
@@ -84,14 +88,20 @@ export default function HomePage() {
       if (isSupabaseConfigured()) {
         // 使用 Supabase Edge Function (直接调用，不需要登录)
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+          
           const edgeResponse = await fetch(
             `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-spelling`,
             {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ imageData })
+              body: JSON.stringify({ imageData }),
+              signal: controller.signal
             }
           );
+          clearTimeout(timeoutId);
+          
           if (!edgeResponse.ok) {
             const errorText = await edgeResponse.text();
             throw new Error(`Edge Function error: ${errorText}`);
