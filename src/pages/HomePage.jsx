@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { extractSpelling } from '../services/api';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -84,57 +84,12 @@ export default function HomePage() {
       // 调用 Gemini OCR API 识别图片
       console.log('🔄 正在识别图片内容...');
       
-      let response;
-      if (isSupabaseConfigured()) {
-        // 使用 Supabase Edge Function (直接调用，不需要登录)
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
-          
-          const edgeResponse = await fetch(
-            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/extract-spelling`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ imageData }),
-              signal: controller.signal
-            }
-          );
-          clearTimeout(timeoutId);
-          
-          if (!edgeResponse.ok) {
-            const errorText = await edgeResponse.text();
-            throw new Error(`Edge Function error: ${errorText}`);
-          }
-          response = { data: await edgeResponse.json() };
-        } catch (edgeError) {
-          console.log('Edge Function failed, trying local proxy:', edgeError.message);
-          // Fallback to local proxy
-          response = await fetch('http://localhost:3003/api/extract-spelling', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imageData })
-          }).then(r => r.json());
-        }
-      } else {
-        // 本地开发模式
-        response = await fetch('http://localhost:3003/api/extract-spelling', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ imageData })
-        }).then(r => r.json());
-      }
+      const result = await extractSpelling(imageData);
       
-      const result = isSupabaseConfigured() ? response.data : response;
-      
-      if (!result.success) {
-        throw new Error(result.error || '识别失败');
-      }
-      
-      console.log('✅ 识别成功:', result.data);
+      console.log('✅ 识别成功:', result);
       
       // 检查是否重复 - 比较识别出的单词列表
-      const recognizedWords = result.data.words?.map(w => w.word.toLowerCase()) || [];
+      const recognizedWords = result.words?.map(w => w.word.toLowerCase()) || [];
       
       if (recognizedWords.length > 0) {
         // 检查是否已存在相同或相似的听写记录
@@ -173,13 +128,13 @@ export default function HomePage() {
       
       // 格式化数据用于确认页面
       const recognizedData = {
-        grade: result.data.grade || 'P3',
-        term: result.data.term || 'Term 1',
-        spellingNumber: result.data.spellingNumber || 'Spelling(1)',
-        title: result.data.title || 'Untitled',
+        grade: result.grade || 'P3',
+        term: result.term || 'Term 1',
+        spellingNumber: result.spellingNumber || 'Spelling(1)',
+        title: result.title || 'Untitled',
         imageData: imageData,
         words: recognizedWords,
-        extractedSentences: result.data.words?.map(w => ({
+        extractedSentences: result.words?.map(w => ({
           word: w.word,
           sentence: w.sentence,
           blanked: w.sentence.replace(new RegExp(w.word, 'gi'), '________')
