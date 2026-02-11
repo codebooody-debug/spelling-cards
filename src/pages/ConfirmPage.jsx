@@ -120,7 +120,7 @@ export default function ConfirmPage() {
         ...enrichedWords[index]
       }));
 
-      const newRecord = createStudyRecord({
+      const newRecord = await createStudyRecord({
         grade: editableData.grade,
         term: editableData.term,
         subject: 'Spelling',
