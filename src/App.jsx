@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
+import { ToastProvider } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import './App.css';
 
@@ -23,19 +24,21 @@ const PageLoader = () => (
 function App() {
   return (
     <ErrorBoundary>
-      <AppProvider>
-        <BrowserRouter>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/confirm" element={<ConfirmPage />} />
-              <Route path="/grade/:gradeId/term/:termId" element={<TermPage />} />
-              <Route path="/study/:contentId" element={<StudyPage />} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </Suspense>
-        </BrowserRouter>
-      </AppProvider>
+      <ToastProvider>
+        <AppProvider>
+          <BrowserRouter>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                <Route path="/" element={<HomePage />} />
+                <Route path="/confirm" element={<ConfirmPage />} />
+                <Route path="/grade/:gradeId/term/:termId" element={<TermPage />} />
+                <Route path="/study/:contentId" element={<StudyPage />} />
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </Suspense>
+          </BrowserRouter>
+        </AppProvider>
+      </ToastProvider>
     </ErrorBoundary>
   );
 }

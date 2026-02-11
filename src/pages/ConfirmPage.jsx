@@ -1,5 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
+import { useToast } from '../components/Toast';
 import { ArrowLeft, Check, Edit2, Sparkles, Loader2, School, Calendar, Hash, Type, BookOpen } from 'lucide-react';
 import { useState } from 'react';
 import { enrichWordsBatch } from '../services/api';
@@ -8,6 +9,7 @@ export default function ConfirmPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const { createStudyRecord } = useApp();
+  const { success, error: showError } = useToast();
 
   const { recognizedData } = location.state || {};
 
@@ -93,9 +95,10 @@ export default function ConfirmPage() {
       });
 
       navigate(`/study/${newRecord.id}`);
-    } catch (error) {
-      console.error('生成失败:', error);
-      alert('生成学习卡片失败: ' + error.message);
+      success('学习卡片生成成功');
+    } catch (err) {
+      console.error('生成失败:', err);
+      showError('生成学习卡片失败: ' + err.message);
       setIsGenerating(false);
     }
   };
