@@ -1,5 +1,5 @@
 // Supabase Edge Function: generate-image
-// 为单词生成AI插图
+// 为单词生成AI插图 - 使用 Gemini 2.5 Flash Image
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 
@@ -29,8 +29,9 @@ serve(async (req) => {
 
     console.log('🎨 生成图片:', prompt.substring(0, 50));
 
+    // 使用 Gemini 2.5 Flash Image (Nano Banana)
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${GOOGLE_API_KEY}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GOOGLE_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
