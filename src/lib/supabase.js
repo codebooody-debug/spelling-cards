@@ -1,17 +1,34 @@
 import { createClient } from '@supabase/supabase-js';
 
 // 从环境变量读取（部署后设置）
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+const getSupabaseUrl = () => import.meta.env.VITE_SUPABASE_URL || '';
+const getSupabaseKey = () => import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-// 本地开发时使用 localStorage 作为 fallback
-const isDevelopment = !supabaseUrl || !supabaseKey;
+// 延迟创建客户端，确保环境变量已加载
+let supabaseClient = null;
 
-export const supabase = isDevelopment 
-  ? null 
-  : createClient(supabaseUrl, supabaseKey);
+export const getSupabase = () => {
+  if (!supabaseClient) {
+    const url = getSupabaseUrl();
+    const key = getSupabaseKey();
+    if (url && key) {
+      supabaseClient = createClient(url, key);
+    }
+  }
+  return supabaseClient;
+};
 
-export const isSupabaseConfigured = () => !isDevelopment;
+// 为了兼容性，保留 supabase 导出
+export const supabase = getSupabase();
+
+// 运行时检测配置状态
+export const isSupabaseConfigured = () => {
+  const url = getSupabaseUrl();
+  const key = getSupabaseKey();
+  const configured = !!(url && key);
+  console.log(`[isSupabaseConfigured] URL: ${url ? '已设置' : '未设置'}, Key: ${key ? '已设置' : '未设置'}, 结果: ${configured}`);
+  return configured;
+};
 
 // 本地存储 fallback（开发时使用）
 export const localStorageDB = {
