@@ -13,8 +13,11 @@ const BUCKET_AUDIOS = 'word-audios';
  * @returns {Promise<string>} - 返回图片的公开 URL
  */
 export async function uploadWordImage(word, base64Image, studyRecordId) {
+  console.log(`[uploadWordImage] 开始上传: ${word}`);
+  console.log(`[uploadWordImage] Supabase配置状态: ${isSupabaseConfigured()}`);
+  
   if (!isSupabaseConfigured()) {
-    console.log('Supabase 未配置，跳过图片上传');
+    console.log('[uploadWordImage] Supabase 未配置，跳过图片上传');
     return null;
   }
 
@@ -29,10 +32,14 @@ export async function uploadWordImage(word, base64Image, studyRecordId) {
     const base64Data = match[2];
     const extension = mimeType.split('/')[1] || 'png';
     
+    console.log(`[uploadWordImage] 获取用户信息...`);
     // 生成文件名：用户ID/记录ID/单词.扩展名
     const { data: { user } } = await supabase.auth.getUser();
+    console.log(`[uploadWordImage] 用户信息:`, user ? `已登录 (${user.id})` : '未登录');
+    
     const userId = user?.id || 'anonymous';
     const fileName = `${userId}/${studyRecordId}/${word.toLowerCase()}.${extension}`;
+    console.log(`[uploadWordImage] 文件名: ${fileName}`);
     
     // base64 转 Uint8Array
     const byteCharacters = atob(base64Data);
@@ -42,6 +49,7 @@ export async function uploadWordImage(word, base64Image, studyRecordId) {
     }
     const byteArray = new Uint8Array(byteNumbers);
 
+    console.log(`[uploadWordImage] 开始上传到 Storage...`);
     // 上传到 Storage
     const { data, error } = await supabase.storage
       .from(BUCKET_IMAGES)
@@ -51,9 +59,11 @@ export async function uploadWordImage(word, base64Image, studyRecordId) {
       });
 
     if (error) {
+      console.error(`[uploadWordImage] Storage上传错误:`, error);
       throw error;
     }
 
+    console.log(`[uploadWordImage] Storage上传成功，获取URL...`);
     // 获取公开 URL
     const { data: { publicUrl } } = supabase.storage
       .from(BUCKET_IMAGES)
@@ -64,6 +74,7 @@ export async function uploadWordImage(word, base64Image, studyRecordId) {
 
   } catch (error) {
     console.error(`❌ 图片上传失败 (${word}):`, error);
+    console.error(`错误详情:`, error.message);
     return null;
   }
 }
@@ -162,28 +173,50 @@ export async function getWordImageUrl(word, studyRecordId) {
  * @param {Object} mediaData - 媒体数据
  */
 export async function saveWordMedia(mediaData) {
-  if (!isSupabaseConfigured()) return null;
+  console.log('[saveWordMedia] 开始保存媒体数据');
+  console.log('[saveWordMedia] Supabase配置状态:', isSupabaseConfigured());
+  
+  if (!isSupabaseConfigured()) {
+    console.log('[saveWordMedia] Supabase 未配置');
+    return null;
+  }
 
   try {
+    console.log('[saveWordMedia] 获取用户信息...');
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    console.log('[saveWordMedia] 用户信息:', user ? `已登录 (${user.id})` : '未登录');
+    
+    if (!user) {
+      console.error('[saveWordMedia] 用户未登录，无法保存');
+      throw new Error('User not authenticated');
+    }
 
+    console.log('[saveWordMedia] 准备插入数据...');
+    const dataToInsert = {
+      ...mediaData,
+      user_id: user.id,
+      updated_at: new Date().toISOString()
+    };
+    console.log('[saveWordMedia] 插入数据:', JSON.stringify(dataToInsert, null, 2));
+    
     const { data, error } = await supabase
       .from('word_media')
-      .upsert({
-        ...mediaData,
-        user_id: user.id,
-        updated_at: new Date().toISOString()
-      }, {
+      .upsert(dataToInsert, {
         onConflict: 'user_id,study_record_id,word'
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('[saveWordMedia] 数据库错误:', error);
+      throw error;
+    }
+    
+    console.log('[saveWordMedia] 保存成功:', data);
     return data;
   } catch (error) {
-    console.error('保存单词媒体失败:', error);
+    console.error('[saveWordMedia] 保存单词媒体失败:', error);
+    console.error('错误详情:', error.message);
     return null;
   }
 }
