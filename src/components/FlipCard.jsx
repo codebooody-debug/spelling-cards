@@ -4,12 +4,10 @@ import { getCachedImage, saveImageToCache } from '../services/imageCache';
 import { generateImage } from '../services/api';
 import { getWordImageUrl, uploadWordImage } from '../services/storage';
 
-function FlipCard({ item, ttsProvider, availableProviders, flippedAll, studyRecordId }) {
+function FlipCard({ item, flippedAll, studyRecordId }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [audioCache, setAudioCache] = useState({});
-  const [usageInfo, setUsageInfo] = useState(null);
   const [wordImage, setWordImage] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageError, setImageError] = useState(null);
@@ -23,6 +21,7 @@ function FlipCard({ item, ttsProvider, availableProviders, flippedAll, studyReco
     }
   }, [flippedAll]);
 
+  // 加载或生成图片
   useEffect(() => {
     const loadImage = async () => {
       const word = item.target_word;
@@ -125,72 +124,20 @@ ABSOLUTELY PROHIBITED:
     loadImage();
   }, [item.target_word, studyRecordId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const generateGoogleAudio = useCallback(async (text) => {
-    if (!availableProviders.google) return null;
-    const cacheKey = `google-${text}`;
-    if (audioCache[cacheKey]) return audioCache[cacheKey];
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-      const response = await fetch('http://localhost:3002/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voice_id: 'en-US-Wavenet-D', speed: 0.85 }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      if (data.success && data.audio_base64) {
-        const audioUrl = `data:audio/mp3;base64,${data.audio_base64}`;
-        setAudioCache(prev => ({ ...prev, [cacheKey]: audioUrl }));
-        if (data.extra_info) setUsageInfo(data.extra_info);
-        return audioUrl;
-      }
-      throw new Error(data.error || 'No audio content');
-    } catch (error) {
-      console.log(`Google TTS 失败 (${text.substring(0, 20)}...):`, error.message);
-      return null;
-    }
-  }, [audioCache, availableProviders.google]);
-
-  const generateMiniMaxAudio = useCallback(async (text) => {
-    if (!availableProviders.minimax) return null;
-    const cacheKey = `minimax-${text}`;
-    if (audioCache[cacheKey]) return audioCache[cacheKey];
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000);
-      const response = await fetch('http://localhost:3001/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voice_id: 'male-qn-qingse', speed: 0.8 }),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      const data = await response.json();
-      if (data.success && data.audio_base64) {
-        const audioUrl = `data:audio/mp3;base64,${data.audio_base64}`;
-        setAudioCache(prev => ({ ...prev, [cacheKey]: audioUrl }));
-        if (data.extra_info) setUsageInfo(data.extra_info);
-        return audioUrl;
-      }
-      throw new Error(data.error || 'No audio content');
-    } catch (error) {
-      console.log(`MiniMax TTS 失败 (${text.substring(0, 20)}...):`, error.message);
-      return null;
-    }
-  }, [audioCache, availableProviders.minimax]);
-
+  // 浏览器原生语音合成
   const playBrowserTTS = useCallback((text) => {
-    if (!window.speechSynthesis) return false;
+    if (!window.speechSynthesis) {
+      console.warn('浏览器不支持语音合成');
+      return false;
+    }
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'en-US';
       utterance.rate = 0.85;
       utterance.pitch = 1;
+      
+      // 尝试选择更好的语音
       const voices = window.speechSynthesis.getVoices();
       const preferredVoice = voices.find(v => 
         v.name.includes('Google US English') || 
@@ -198,78 +145,41 @@ ABSOLUTELY PROHIBITED:
         v.lang === 'en-US'
       );
       if (preferredVoice) utterance.voice = preferredVoice;
+      
       utterance.onstart = () => setIsPlaying(true);
       utterance.onend = () => setIsPlaying(false);
-      utterance.onerror = () => setIsPlaying(false);
+      utterance.onerror = (e) => {
+        console.error('TTS 错误:', e);
+        setIsPlaying(false);
+      };
+      
       window.speechSynthesis.speak(utterance);
       return true;
-    } catch {
+    } catch (error) {
+      console.error('浏览器 TTS 失败:', error);
       return false;
     }
   }, []);
 
+  // 播放语音
   const playAudio = useCallback(async (e, text) => {
     e.stopPropagation();
     if (isPlaying || isLoading) return;
+    
     setIsLoading(true);
-    let audioUrl = null;
-    let usedProvider = null;
     
     try {
-      if (ttsProvider === 'google') {
-        if (!availableProviders.google) throw new Error('Google Cloud TTS 服务不可用');
-        audioUrl = await generateGoogleAudio(text);
-        if (audioUrl) usedProvider = 'google';
-        else throw new Error('Google Cloud TTS 生成音频失败');
-      } else if (ttsProvider === 'minimax') {
-        if (!availableProviders.minimax) throw new Error('MiniMax TTS 服务不可用');
-        audioUrl = await generateMiniMaxAudio(text);
-        if (audioUrl) usedProvider = 'minimax';
-        else throw new Error('MiniMax TTS 生成音频失败');
-      } else if (ttsProvider === 'browser') {
-        const browserSuccess = playBrowserTTS(text);
-        if (browserSuccess) {
-          usedProvider = 'browser';
-          setIsLoading(false);
-          return;
-        } else throw new Error('浏览器 TTS 不可用');
-      } else if (ttsProvider === 'auto') {
-        if (availableProviders.google) {
-          audioUrl = await generateGoogleAudio(text);
-          if (audioUrl) usedProvider = 'google';
-        }
-        if (!audioUrl && availableProviders.minimax) {
-          audioUrl = await generateMiniMaxAudio(text);
-          if (audioUrl) usedProvider = 'minimax';
-        }
-        if (!audioUrl) throw new Error('云端 TTS 不可用');
-      }
-      
-      if (audioUrl) {
-        const audio = new Audio(audioUrl);
-        await new Promise((resolve, reject) => {
-          audio.onplay = () => {
-            setIsPlaying(true);
-            console.log(`✅ 使用 ${usedProvider} 播放: ${text.substring(0, 30)}...`);
-          };
-          audio.onended = () => {
-            setIsPlaying(false);
-            resolve();
-          };
-          audio.onerror = () => {
-            setIsPlaying(false);
-            reject(new Error('音频播放失败'));
-          };
-          audio.play().catch(reject);
-        });
+      const success = playBrowserTTS(text);
+      if (!success) {
+        throw new Error('浏览器语音合成不可用');
       }
     } catch (error) {
-      console.error('TTS 错误:', error.message);
-      alert(`语音播放失败: ${error.message}\n请尝试切换到其他语音源。`);
+      console.error('播放失败:', error.message);
+      // 静默失败，不弹 alert 打扰用户
     } finally {
       setIsLoading(false);
     }
-  }, [ttsProvider, availableProviders, generateGoogleAudio, generateMiniMaxAudio, playBrowserTTS, isPlaying, isLoading]);
+  }, [playBrowserTTS, isPlaying, isLoading]);
 
   const handleFlip = () => setIsFlipped(!isFlipped);
 
@@ -298,10 +208,10 @@ ABSOLUTELY PROHIBITED:
     >
       <div className="card-inner relative w-full h-full">
         
-        {/* 正面 - 重新设计布局 */}
+        {/* 正面 */}
         <div className="card-front absolute w-full h-full bg-white rounded-2xl shadow border border-gray-200 p-4 flex flex-col overflow-hidden">
           
-          {/* 1. 顶部：单词信息 */}
+          {/* 顶部：单词信息 */}
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
               <div className="flex items-center gap-2">
@@ -317,17 +227,19 @@ ABSOLUTELY PROHIBITED:
             </div>
             <div className="flex gap-1.5">
               <button onClick={(e) => playAudio(e, item.target_word)} disabled={isLoading}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${getButtonClass(true)}`}>
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${getButtonClass(true)}`}
+                title="播放单词">
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <span className="text-xs font-bold">Aa</span>}
               </button>
               <button onClick={(e) => playAudio(e, item.sentence)} disabled={isLoading}
-                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${getButtonClass(false)}`}>
+                className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${getButtonClass(false)}`}
+                title="播放例句">
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} className={isPlaying ? 'animate-pulse' : ''} />}
               </button>
             </div>
           </div>
           
-          {/* 2. 图片区域 */}
+          {/* 图片区域 */}
           <div className="rounded-2xl w-[260px] h-[260px] mx-auto flex items-center justify-center mb-3 shrink-0 overflow-hidden bg-white">
             {isGeneratingImage ? (
               <div className="flex flex-col items-center text-gray-500">
@@ -348,12 +260,12 @@ ABSOLUTELY PROHIBITED:
             )}
           </div>
 
-          {/* 3. 例句区域 - 关键修复 */}
+          {/* 例句区域 */}
           <div className="flex-1 min-h-0 overflow-y-auto mb-2">
             <p className="text-base text-gray-700 leading-relaxed">{renderHighlightedSentence()}</p>
           </div>
 
-          {/* 4. 底部区域：分割线 + 同义词反义词 */}
+          {/* 底部：同义词反义词 */}
           <div className="pt-2 border-t border-gray-100">
             {item.synonyms?.length > 0 && (
               <div className="mb-1 flex items-center flex-wrap gap-2">
@@ -368,15 +280,6 @@ ABSOLUTELY PROHIBITED:
               </div>
             )}
           </div>
-          
-          {usageInfo && (
-            <div className="mt-1 pt-1 border-t border-gray-100">
-              <div className="flex justify-between text-[9px] text-gray-400">
-                <span>字符: {usageInfo.usage_characters}</span>
-                <span>{(usageInfo.audio_length / 1000).toFixed(1)}s</span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* 背面 */}
