@@ -1,9 +1,10 @@
-import { lazy, Suspense, useEffect } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { ToastProvider } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import { initializeStorage } from './services/init';
+import { getSupabase } from './lib/supabase';
 import './App.css';
 
 // 懒加载页面组件
@@ -11,6 +12,7 @@ const HomePage = lazy(() => import('./pages/HomePage'));
 const ConfirmPage = lazy(() => import('./pages/ConfirmPage'));
 const TermPage = lazy(() => import('./pages/TermPage'));
 const StudyPage = lazy(() => import('./pages/StudyPage'));
+const LoginPage = lazy(() => import('./pages/LoginPage'));
 
 // 加载中组件
 const PageLoader = () => (
@@ -21,6 +23,41 @@ const PageLoader = () => (
     </div>
   </div>
 );
+
+// 路由保护组件
+function ProtectedRoute({ children }) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = getSupabase();
+      if (!supabase) {
+        setIsLoading(false);
+        return;
+      }
+
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      setIsLoading(false);
+    };
+
+    checkAuth();
+
+    // 监听登录状态变化
+    const supabase = getSupabase();
+    if (supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setIsAuthenticated(!!session);
+      });
+      return () => subscription.unsubscribe();
+    }
+  }, []);
+
+  if (isLoading) return <PageLoader />;
+  
+  return isAuthenticated ? children : <Navigate to="/login" />;
+}
 
 function App() {
   // 初始化 Storage buckets
@@ -35,10 +72,27 @@ function App() {
           <BrowserRouter>
             <Suspense fallback={<PageLoader />}>
               <Routes>
-                <Route path="/" element={<HomePage />} />
-                <Route path="/confirm" element={<ConfirmPage />} />
-                <Route path="/grade/:gradeId/term/:termId" element={<TermPage />} />
-                <Route path="/study/:contentId" element={<StudyPage />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <HomePage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/confirm" element={
+                  <ProtectedRoute>
+                    <ConfirmPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/grade/:gradeId/term/:termId" element={
+                  <ProtectedRoute>
+                    <TermPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/study/:contentId" element={
+                  <ProtectedRoute>
+                    <StudyPage />
+                  </ProtectedRoute>
+                } />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </Suspense>
