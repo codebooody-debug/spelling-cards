@@ -1,7 +1,7 @@
 // 初始化 Supabase Storage Buckets
-// 在应用启动时调用
+// 仅检查状态，不自动创建（需要管理员在 Dashboard 中手动创建）
 
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 
 const BUCKETS = [
   {
@@ -19,7 +19,8 @@ const BUCKETS = [
 ];
 
 /**
- * 初始化所有需要的 Storage Buckets
+ * 初始化 Storage - 仅检查状态，不自动创建 buckets
+ * Buckets 应该由管理员在 Supabase Dashboard 中手动创建
  */
 export async function initializeStorage() {
   if (!isSupabaseConfigured()) {
@@ -27,58 +28,56 @@ export async function initializeStorage() {
     return;
   }
 
+  const supabase = getSupabase();
+  if (!supabase) {
+    console.log('Supabase 客户端未初始化');
+    return;
+  }
+
   try {
+    // 获取当前用户
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log('用户未登录，跳过 Storage 初始化检查');
+      return;
+    }
+
     // 获取现有 buckets
     const { data: existingBuckets, error: listError } = await supabase.storage.listBuckets();
     
     if (listError) {
       console.error('获取 Storage buckets 失败:', listError);
+      console.log('请确保在 Supabase Dashboard 中已创建以下 buckets:', BUCKETS.map(b => b.name).join(', '));
       return;
     }
 
     const existingNames = existingBuckets?.map(b => b.name) || [];
+    console.log('已存在的 Storage buckets:', existingNames);
 
-    // 创建缺失的 buckets
-    for (const bucket of BUCKETS) {
-      if (!existingNames.includes(bucket.name)) {
-        console.log(`创建 Storage bucket: ${bucket.name}`);
-        
-        const { error } = await supabase.storage.createBucket(bucket.name, {
-          public: bucket.public,
-          fileSizeLimit: bucket.fileSizeLimit,
-          allowedMimeTypes: bucket.allowedMimeTypes
-        });
-
-        if (error) {
-          console.error(`创建 bucket ${bucket.name} 失败:`, error);
-        } else {
-          console.log(`✅ Bucket ${bucket.name} 创建成功`);
-        }
-      } else {
-        console.log(`Bucket ${bucket.name} 已存在`);
-      }
+    // 检查必需的 buckets 是否存在
+    const missingBuckets = BUCKETS.filter(bucket => !existingNames.includes(bucket.name));
+    
+    if (missingBuckets.length > 0) {
+      console.warn('缺少必需的 Storage buckets:', missingBuckets.map(b => b.name));
+      console.warn('请在 Supabase Dashboard 中手动创建这些 buckets');
+      console.warn('详见 docs/CLOUD_SYNC_SETUP.md');
+    } else {
+      console.log('✅ 所有必需的 Storage buckets 已存在');
     }
-
-    // 设置 bucket 公开访问策略（如果不存在）
-    await setupBucketPolicies();
 
   } catch (error) {
     console.error('初始化 Storage 失败:', error);
+    console.log('提示: 请确保在 Supabase Dashboard 中已创建 buckets 并配置了访问策略');
   }
 }
 
 /**
  * 设置 bucket 公开访问策略
+ * 注意：实际策略需要在 Supabase Dashboard 中配置
  */
 async function setupBucketPolicies() {
-  try {
-    // 通过 SQL 设置策略（需要在 Supabase Dashboard 中执行）
-    // 这里只是检查，实际策略需要在 Dashboard 中配置
-    console.log('请确保在 Supabase Dashboard 中配置了 Storage 访问策略');
-    console.log('详见 docs/CLOUD_SYNC_SETUP.md');
-  } catch (error) {
-    console.error('设置 bucket 策略失败:', error);
-  }
+  console.log('请确保在 Supabase Dashboard 中配置了 Storage 访问策略');
+  console.log('详见 docs/CLOUD_SYNC_SETUP.md');
 }
 
 /**
@@ -89,7 +88,17 @@ export async function checkStorageStatus() {
     return { configured: false, buckets: [] };
   }
 
+  const supabase = getSupabase();
+  if (!supabase) {
+    return { configured: false, error: 'Supabase 客户端未初始化', buckets: [] };
+  }
+
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      return { configured: false, error: '用户未登录', buckets: [] };
+    }
+
     const { data: buckets, error } = await supabase.storage.listBuckets();
     
     if (error) throw error;
