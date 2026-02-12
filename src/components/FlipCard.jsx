@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Volume2, HelpCircle, Loader2, ImageIcon } from 'lucide-react';
+import { Volume2, HelpCircle, Loader2, ImageIcon, Cloud } from 'lucide-react';
 import { getCachedImage, saveImageToCache } from '../services/imageCache';
 import { generateImage } from '../services/api';
+import { getWordImageUrl } from '../services/storage';
 
-function FlipCard({ item, ttsProvider, availableProviders, flippedAll }) {
+function FlipCard({ item, ttsProvider, availableProviders, flippedAll, studyRecordId }) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,8 +24,26 @@ function FlipCard({ item, ttsProvider, availableProviders, flippedAll }) {
   }, [flippedAll]);
 
   useEffect(() => {
-    const loadCachedImage = async () => {
+    const loadImage = async () => {
       const word = item.target_word;
+      
+      // 步骤1: 优先从 Supabase 云端加载
+      if (studyRecordId) {
+        try {
+          const cloudUrl = await getWordImageUrl(word, studyRecordId);
+          if (cloudUrl) {
+            setWordImage(cloudUrl);
+            // 同时缓存到本地 IndexedDB
+            await saveImageToCache(word, cloudUrl);
+            console.log(`☁️ 从云端加载图片: ${word}`);
+            return;
+          }
+        } catch (error) {
+          console.log(`云端加载失败 (${word}), 尝试本地缓存:`, error);
+        }
+      }
+      
+      // 步骤2: 从本地 IndexedDB 加载
       const cachedImage = await getCachedImage(word);
       if (cachedImage) {
         setWordImage(cachedImage);
@@ -32,13 +51,13 @@ function FlipCard({ item, ttsProvider, availableProviders, flippedAll }) {
         return;
       }
       
+      // 步骤3: 如果没有缓存，生成新图片
       if (hasGeneratedRef.current || isGeneratingImage) return;
       
       hasGeneratedRef.current = true;
       setIsGeneratingImage(true);
       setImageError(null);
       
-      // 用于取消请求的 AbortController
       const abortController = new AbortController();
       
       const generateWordImage = async () => {
@@ -51,7 +70,6 @@ Focus on showing the exact meaning of the word in a clear, uncluttered scene sui
           
           const data = await generateImage(prompt, 1024, 1024);
           
-          // 如果请求被取消，不更新状态
           if (abortController.signal.aborted) return;
           
           const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
@@ -59,7 +77,6 @@ Focus on showing the exact meaning of the word in a clear, uncluttered scene sui
           await saveImageToCache(word, imageUrl);
           console.log(`✅ 图片生成并缓存成功: ${word}`);
         } catch (error) {
-          // 如果请求被取消，不显示错误
           if (error.name === 'AbortError') {
             console.log(`🚫 图片生成请求已取消: ${word}`);
             return;
@@ -74,14 +91,13 @@ Focus on showing the exact meaning of the word in a clear, uncluttered scene sui
       
       generateWordImage();
       
-      // Cleanup 函数：组件卸载时取消请求
       return () => {
         abortController.abort();
       };
     };
     
-    loadCachedImage();
-  }, [item.target_word]); // eslint-disable-line react-hooks/exhaustive-deps
+    loadImage();
+  }, [item.target_word, studyRecordId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const generateGoogleAudio = useCallback(async (text) => {
     if (!availableProviders.google) return null;
