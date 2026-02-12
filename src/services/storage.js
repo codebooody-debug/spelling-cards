@@ -163,16 +163,22 @@ export async function getWordImageUrl(word, studyRecordId) {
       .from('word_media')
       .select('image_url')
       .eq('study_record_id', studyRecordId)
-      .eq('word', word.toLowerCase())
-      .single();
+      .eq('word', word.toLowerCase());
 
-    if (error || !data?.image_url) {
+    // 处理错误
+    if (error) {
+      console.error(`[getWordImageUrl] 查询失败 (${word}):`, error);
       return null;
     }
 
-    return data.image_url;
+    // 没有记录或没有图片 URL
+    if (!data || data.length === 0 || !data[0]?.image_url) {
+      return null;
+    }
+
+    return data[0].image_url;
   } catch (error) {
-    console.error(`获取图片 URL 失败 (${word}):`, error);
+    console.error(`[getWordImageUrl] 异常 (${word}):`, error);
     return null;
   }
 }
