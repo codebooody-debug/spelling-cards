@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Volume2, HelpCircle, Loader2, ImageIcon, Cloud } from 'lucide-react';
+import { Volume2, HelpCircle, Loader2, ImageIcon } from 'lucide-react';
 import { getCachedImage, saveImageToCache } from '../services/imageCache';
 import { generateImage } from '../services/api';
-import { getWordImageUrl } from '../services/storage';
+import { getWordImageUrl, uploadWordImage, saveWordMedia } from '../services/storage';
 
 function FlipCard({ item, ttsProvider, availableProviders, flippedAll, studyRecordId }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -72,10 +72,17 @@ Focus on showing the exact meaning of the word in a clear, uncluttered scene sui
           
           if (abortController.signal.aborted) return;
           
-          const imageUrl = `data:${data.mimeType};base64,${data.imageBase64}`;
-          setWordImage(imageUrl);
-          await saveImageToCache(word, imageUrl);
-          console.log(`✅ 图片生成并缓存成功: ${word}`);
+          const imageBase64 = `data:${data.mimeType};base64,${data.imageBase64}`;
+          
+          // 1. 立即显示本地图片
+          setWordImage(imageBase64);
+          await saveImageToCache(word, imageBase64);
+          console.log(`✅ 图片生成成功: ${word}`);
+          
+          // 2. 上传到 Supabase 云端（后台进行，不阻塞用户）
+          if (studyRecordId) {
+            uploadToCloud(word, imageBase64, studyRecordId, item);
+          }
         } catch (error) {
           if (error.name === 'AbortError') {
             console.log(`🚫 图片生成请求已取消: ${word}`);
@@ -86,6 +93,33 @@ Focus on showing the exact meaning of the word in a clear, uncluttered scene sui
           hasGeneratedRef.current = false;
         } finally {
           setIsGeneratingImage(false);
+        }
+      };
+      
+      // 上传到云端的函数（后台执行）
+      const uploadToCloud = async (word, imageBase64, recordId, itemData) => {
+        try {
+          const imageUrl = await uploadWordImage(word, imageBase64, recordId);
+          if (imageUrl) {
+            // 保存到 word_media 表
+            await saveWordMedia({
+              word: word.toLowerCase(),
+              study_record_id: recordId,
+              image_url: imageUrl,
+              image_generated_at: new Date().toISOString(),
+              meaning: itemData.meaning || '',
+              word_type: itemData.word_type || 'noun',
+              synonyms: itemData.synonyms || [],
+              antonyms: itemData.antonyms || [],
+              practice_sentences: itemData.practice_sentences || [],
+              memory_tip: itemData.memory_tip || '',
+              sentence: itemData.sentence || ''
+            });
+            console.log(`☁️ 图片已上传到云端: ${word}`);
+          }
+        } catch (error) {
+          console.error(`云端上传失败 (${word}):`, error);
+          // 上传失败不影响本地使用
         }
       };
       
