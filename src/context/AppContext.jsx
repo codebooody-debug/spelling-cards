@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import { supabase, isSupabaseConfigured, localStorageDB } from '../lib/supabase';
+import { getSupabase, isSupabaseConfigured, localStorageDB } from '../lib/supabase';
 
 const AppContext = createContext(null);
 
@@ -10,7 +10,8 @@ export function AppProvider({ children }) {
 
   // 检查登录状态
   useEffect(() => {
-    if (isSupabaseConfigured()) {
+    const supabase = getSupabase();
+    if (isSupabaseConfigured() && supabase) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         setUser(session?.user ?? null);
       });
@@ -26,8 +27,9 @@ export function AppProvider({ children }) {
   // 从数据库加载数据
   useEffect(() => {
     const loadData = async () => {
+      const supabase = getSupabase();
       try {
-        if (isSupabaseConfigured() && user) {
+        if (isSupabaseConfigured() && supabase && user) {
           // 从 Supabase 加载
           const { data, error } = await supabase
             .from('study_records')
@@ -64,7 +66,8 @@ export function AppProvider({ children }) {
     };
 
     try {
-      if (isSupabaseConfigured() && user) {
+      const supabase = getSupabase();
+      if (isSupabaseConfigured() && supabase && user) {
         // 上传图片到 Storage（如果有）
         let imageUrl = null;
         if (record.sourceImage) {
@@ -119,7 +122,8 @@ export function AppProvider({ children }) {
   // 删除学习记录
   const deleteStudyRecord = async (recordId) => {
     try {
-      if (isSupabaseConfigured() && user) {
+      const supabase = getSupabase();
+      if (isSupabaseConfigured() && supabase && user) {
         const { error } = await supabase
           .from('study_records')
           .delete()
@@ -158,6 +162,8 @@ export function AppProvider({ children }) {
   // 登录
   const signIn = async (email, password) => {
     if (!isSupabaseConfigured()) return { error: 'Supabase 未配置' };
+    const supabase = getSupabase();
+    if (!supabase) return { error: 'Supabase 客户端未初始化' };
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     return { data, error };
   };
@@ -165,6 +171,8 @@ export function AppProvider({ children }) {
   // 注册
   const signUp = async (email, password) => {
     if (!isSupabaseConfigured()) return { error: 'Supabase 未配置' };
+    const supabase = getSupabase();
+    if (!supabase) return { error: 'Supabase 客户端未初始化' };
     const { data, error } = await supabase.auth.signUp({ email, password });
     return { data, error };
   };
@@ -172,6 +180,8 @@ export function AppProvider({ children }) {
   // 登出
   const signOut = async () => {
     if (!isSupabaseConfigured()) return;
+    const supabase = getSupabase();
+    if (!supabase) return;
     await supabase.auth.signOut();
     setUser(null);
     setStudyRecords([]);

@@ -1,6 +1,6 @@
 // Supabase Storage 服务 - 处理图片和音频的上传下载
 
-import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 
 const BUCKET_IMAGES = 'word-images';
 const BUCKET_AUDIOS = 'word-audios';
@@ -18,6 +18,12 @@ export async function uploadWordImage(word, base64Image, studyRecordId) {
   
   if (!isSupabaseConfigured()) {
     console.log('[uploadWordImage] Supabase 未配置，跳过图片上传');
+    return null;
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) {
+    console.error('[uploadWordImage] 无法获取 Supabase 客户端');
     return null;
   }
 
@@ -148,6 +154,9 @@ export async function uploadWordAudio(word, base64Audio, studyRecordId, type = '
 export async function getWordImageUrl(word, studyRecordId) {
   if (!isSupabaseConfigured()) return null;
 
+  const supabase = getSupabase();
+  if (!supabase) return null;
+
   try {
     // 先从 word_media 表查询
     const { data, error } = await supabase
@@ -178,6 +187,12 @@ export async function saveWordMedia(mediaData) {
   
   if (!isSupabaseConfigured()) {
     console.log('[saveWordMedia] Supabase 未配置');
+    return null;
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) {
+    console.error('[saveWordMedia] 无法获取 Supabase 客户端');
     return null;
   }
 
