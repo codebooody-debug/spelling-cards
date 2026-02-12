@@ -1,39 +1,38 @@
-// Supabase Storage 服务 - 处理图片和音频的上传下载
-// 简化版本 - 专注于核心功能
+// 简化版 Storage 服务 - 只上传图片到 Storage，不保存到数据库
 
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 
 const BUCKET_IMAGES = 'word-images';
 
 /**
- * 上传 base64 图片到 Supabase Storage
+ * 上传图片到 Supabase Storage
  */
 export async function uploadWordImage(word, base64Image, studyRecordId) {
-  console.log(`[upload] 开始: ${word}`);
+  console.log(`[上传] 开始: ${word}`);
   
   if (!isSupabaseConfigured()) {
-    console.log('[upload] Supabase 未配置');
+    console.log('[上传] Supabase 未配置');
     return null;
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    console.error('[upload] 无客户端');
+    console.error('[上传] 无客户端');
     return null;
   }
 
   try {
-    // 检查用户登录状态
+    // 检查用户
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error('[upload] 用户未登录');
+      console.error('[上传] 未登录');
       return null;
     }
 
     // 解析 base64
     const match = base64Image.match(/^data:(image\/\w+);base64,(.+)$/);
     if (!match) {
-      console.error('[upload] 无效的 base64 格式');
+      console.error('[上传] 格式错误');
       return null;
     }
 
@@ -41,9 +40,8 @@ export async function uploadWordImage(word, base64Image, studyRecordId) {
     const base64Data = match[2];
     const extension = mimeType.split('/')[1] || 'png';
     
-    // 生成文件路径
+    // 文件路径
     const fileName = `${user.id}/${studyRecordId}/${word.toLowerCase()}.${extension}`;
-    console.log(`[upload] 路径: ${fileName}`);
     
     // base64 转 Uint8Array
     const byteCharacters = atob(base64Data);
@@ -61,7 +59,7 @@ export async function uploadWordImage(word, base64Image, studyRecordId) {
       });
 
     if (error) {
-      console.error('[upload] Storage 错误:', error);
+      console.error('[上传] Storage 失败:', error.message);
       return null;
     }
 
@@ -70,17 +68,18 @@ export async function uploadWordImage(word, base64Image, studyRecordId) {
       .from(BUCKET_IMAGES)
       .getPublicUrl(fileName);
 
-    console.log(`[upload] 成功: ${publicUrl}`);
+    console.log(`[上传] 成功: ${publicUrl}`);
     return publicUrl;
 
   } catch (error) {
-    console.error(`[upload] 异常:`, error);
+    console.error(`[上传] 异常:`, error.message);
     return null;
   }
 }
 
 /**
- * 获取单词图片 URL
+ * 获取图片 URL
+ * 先查 Storage，没有再查本地
  */
 export async function getWordImageUrl(word, studyRecordId) {
   if (!isSupabaseConfigured()) return null;
@@ -89,75 +88,32 @@ export async function getWordImageUrl(word, studyRecordId) {
   if (!supabase) return null;
 
   try {
-    // 使用 limit(1) 替代 maybeSingle
-    const { data, error } = await supabase
-      .from('word_media')
-      .select('image_url')
-      .eq('study_record_id', studyRecordId)
-      .eq('word', word.toLowerCase())
-      .limit(1);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
 
-    if (error) {
-      console.log(`[getUrl] 查询失败: ${word}`, error.message);
-      return null;
-    }
+    const fileName = `${user.id}/${studyRecordId}/${word.toLowerCase()}.png`;
+    
+    // 检查文件是否存在
+    const { data: exists } = await supabase.storage
+      .from(BUCKET_IMAGES)
+      .list(`${user.id}/${studyRecordId}`);
+    
+    const file = exists?.find(f => f.name === `${word.toLowerCase()}.png`);
+    if (!file) return null;
 
-    if (data && data.length > 0 && data[0]?.image_url) {
-      return data[0].image_url;
-    }
+    // 获取 URL
+    const { data: { publicUrl } } = supabase.storage
+      .from(BUCKET_IMAGES)
+      .getPublicUrl(fileName);
 
-    return null;
+    return publicUrl;
   } catch (error) {
-    console.error(`[getUrl] 异常: ${word}`, error.message);
     return null;
   }
 }
 
-/**
- * 保存单词媒体信息
- */
+// 保留空函数兼容旧代码
 export async function saveWordMedia(mediaData) {
-  console.log('[save] 开始');
-  
-  if (!isSupabaseConfigured()) {
-    console.log('[save] 未配置');
-    return null;
-  }
-
-  const supabase = getSupabase();
-  if (!supabase) {
-    console.error('[save] 无客户端');
-    return null;
-  }
-
-  try {
-    // 检查用户
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error('[save] 未登录');
-      return null;
-    }
-
-    // 保存数据
-    const { data, error } = await supabase
-      .from('word_media')
-      .upsert({
-        ...mediaData,
-        user_id: user.id,
-        updated_at: new Date().toISOString()
-      }, {
-        onConflict: 'user_id,study_record_id,word'
-      });
-
-    if (error) {
-      console.error('[save] 数据库错误:', error);
-      return null;
-    }
-    
-    console.log('[save] 成功');
-    return data;
-  } catch (error) {
-    console.error('[save] 异常:', error);
-    return null;
-  }
+  console.log('[保存数据库] 已禁用，仅使用 Storage');
+  return null;
 }
