@@ -63,10 +63,27 @@ function FlipCard({ item, ttsProvider, availableProviders, flippedAll, studyReco
       const generateWordImage = async () => {
         try {
           const sentence = item.sentence || '';
-          const prompt = `Simple, clean illustration depicting "${word}" based on this context: "${sentence}". 
-Minimal design with one clear focal point. 
-Soft pastel colors, white background, no text, no cluttered elements. 
-Focus on showing the exact meaning of the word in a clear, uncluttered scene suitable for children to understand.`;
+          const prompt = `Create a simple, clean illustration of "${word}" based on this context: "${sentence}".
+
+STYLE REQUIREMENTS (STRICT):
+- Pure white background ONLY (#FFFFFF), no gradients, no shadows
+- NO borders, NO frames, NO decorative elements
+- NO text, NO letters, NO numbers, NO watermarks
+- NO black backgrounds, NO dark vignettes
+- Clean, minimal design with single clear subject
+- Soft pastel colors (light blue, light pink, light yellow, light green)
+- Flat illustration style, no 3D effects
+- Centered composition with ample white space around
+- Child-friendly, educational material style
+- The subject should be clearly recognizable and take up 60-80% of the image
+
+ABSOLUTELY PROHIBITED:
+- Black or dark backgrounds
+- Text or typography of any kind
+- Borders or frames
+- Multiple scattered elements
+- Abstract patterns or textures
+- Drop shadows or depth effects`;
           
           const data = await generateImage(prompt, 1024, 1024);
           
