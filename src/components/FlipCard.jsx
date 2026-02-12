@@ -96,9 +96,31 @@ ABSOLUTELY PROHIBITED:
           await saveImageToCache(word, imageBase64);
           console.log(`✅ 图片生成成功: ${word}`);
           
-          // 2. 上传到 Supabase 云端（后台进行，不阻塞用户）
+          // 2. 上传到云端（直接内联，不使用单独函数）
           if (studyRecordId) {
-            uploadToCloud(word, imageBase64, studyRecordId, item);
+            console.log(`☁️ 开始上传: ${word}`);
+            
+            // 上传图片到 Storage
+            const imageUrl = await uploadWordImage(word, imageBase64, studyRecordId);
+            console.log(`☁️ Storage返回: ${imageUrl ? '成功' : '失败'}`);
+            
+            if (imageUrl) {
+              // 保存到数据库
+              const mediaResult = await saveWordMedia({
+                word: word.toLowerCase(),
+                study_record_id: studyRecordId,
+                image_url: imageUrl,
+                image_generated_at: new Date().toISOString(),
+                meaning: item.meaning || '',
+                word_type: item.word_type || 'noun',
+                synonyms: item.synonyms || [],
+                antonyms: item.antonyms || [],
+                practice_sentences: item.practice_sentences || [],
+                memory_tip: item.memory_tip || '',
+                sentence: item.sentence || ''
+              });
+              console.log(`☁️ 数据库返回: ${mediaResult ? '成功' : '失败'}`);
+            }
           }
         } catch (error) {
           if (error.name === 'AbortError') {
@@ -110,32 +132,6 @@ ABSOLUTELY PROHIBITED:
           hasGeneratedRef.current = false;
         } finally {
           setIsGeneratingImage(false);
-        }
-      };
-      
-      // 上传到云端的函数（后台执行）
-      const uploadToCloud = async (word, imageBase64, recordId, itemData) => {
-        try {
-          console.log(`☁️ 上传: ${word}`);
-          const imageUrl = await uploadWordImage(word, imageBase64, recordId);
-          if (imageUrl) {
-            await saveWordMedia({
-              word: word.toLowerCase(),
-              study_record_id: recordId,
-              image_url: imageUrl,
-              image_generated_at: new Date().toISOString(),
-              meaning: itemData.meaning || '',
-              word_type: itemData.word_type || 'noun',
-              synonyms: itemData.synonyms || [],
-              antonyms: itemData.antonyms || [],
-              practice_sentences: itemData.practice_sentences || [],
-              memory_tip: itemData.memory_tip || '',
-              sentence: itemData.sentence || ''
-            });
-            console.log(`☁️ 完成: ${word}`);
-          }
-        } catch (error) {
-          console.error(`❌ 上传失败 (${word}):`, error.message);
         }
       };
       
