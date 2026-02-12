@@ -3,6 +3,7 @@ import { useApp } from '../context/AppContext';
 import FlipCard from '../components/FlipCard';
 import { ArrowLeft, BookOpen, RotateCcw } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { isSupabaseConfigured } from '../lib/supabase';
 
 function StudyPage() {
   const { contentId } = useParams();
@@ -10,20 +11,28 @@ function StudyPage() {
   const { studyRecords } = useApp();
   
   const [flippedAll, setFlippedAll] = useState(false);
-  const [ttsProvider, setTtsProvider] = useState('auto');
+  const [ttsProvider, setTtsProvider] = useState('browser'); // 默认使用浏览器语音
   const [availableProviders, setAvailableProviders] = useState({
     google: false,
     minimax: false,
     browser: true
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const record = studyRecords.find(r => r.id === contentId);
   const spellingData = record?.content;
 
-  // TTS 检测
+  // TTS 检测 - 仅本地开发时检查代理服务
   useEffect(() => {
     const checkAllTTS = async () => {
+      // 生产环境直接使用浏览器语音
+      if (isSupabaseConfigured()) {
+        setAvailableProviders({ google: false, minimax: false, browser: true });
+        setTtsProvider('browser');
+        return;
+      }
+
+      // 本地开发模式检测代理服务器
       setIsLoading(true);
       const [googleResult, minimaxResult] = await Promise.all([
         (async () => {
