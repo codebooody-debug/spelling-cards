@@ -115,15 +115,11 @@ ABSOLUTELY PROHIBITED:
       
       // 上传到云端的函数（后台执行）
       const uploadToCloud = async (word, imageBase64, recordId, itemData) => {
-        console.log(`🔄 开始上传云端: ${word}, recordId: ${recordId}`);
         try {
-          console.log(`📤 调用 uploadWordImage...`);
+          console.log(`☁️ 上传: ${word}`);
           const imageUrl = await uploadWordImage(word, imageBase64, recordId);
-          console.log(`📤 uploadWordImage 返回: ${imageUrl ? '成功' : '失败'}`);
-          
           if (imageUrl) {
-            console.log(`💾 调用 saveWordMedia...`);
-            const mediaData = {
+            await saveWordMedia({
               word: word.toLowerCase(),
               study_record_id: recordId,
               image_url: imageUrl,
@@ -135,19 +131,11 @@ ABSOLUTELY PROHIBITED:
               practice_sentences: itemData.practice_sentences || [],
               memory_tip: itemData.memory_tip || '',
               sentence: itemData.sentence || ''
-            };
-            console.log(`💾 媒体数据:`, JSON.stringify(mediaData, null, 2));
-            
-            const result = await saveWordMedia(mediaData);
-            console.log(`💾 saveWordMedia 返回:`, result ? '成功' : '失败');
-            console.log(`☁️ 图片已上传到云端: ${word}`);
-          } else {
-            console.error(`❌ uploadWordImage 返回 null`);
+            });
+            console.log(`☁️ 完成: ${word}`);
           }
         } catch (error) {
-          console.error(`❌ 云端上传失败 (${word}):`, error);
-          console.error(`错误详情:`, error.message);
-          console.error(`错误堆栈:`, error.stack);
+          console.error(`❌ 上传失败 (${word}):`, error.message);
         }
       };
       
