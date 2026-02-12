@@ -89,21 +89,26 @@ export async function getWordImageUrl(word, studyRecordId) {
   if (!supabase) return null;
 
   try {
+    // 使用 limit(1) 替代 maybeSingle
     const { data, error } = await supabase
       .from('word_media')
       .select('image_url')
       .eq('study_record_id', studyRecordId)
       .eq('word', word.toLowerCase())
-      .maybeSingle(); // 使用 maybeSingle 避免报错
+      .limit(1);
 
     if (error) {
-      console.error('[getUrl] 错误:', error);
+      console.log(`[getUrl] 查询失败: ${word}`, error.message);
       return null;
     }
 
-    return data?.image_url || null;
+    if (data && data.length > 0 && data[0]?.image_url) {
+      return data[0].image_url;
+    }
+
+    return null;
   } catch (error) {
-    console.error('[getUrl] 异常:', error);
+    console.error(`[getUrl] 异常: ${word}`, error.message);
     return null;
   }
 }
