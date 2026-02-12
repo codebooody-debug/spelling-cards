@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Volume2, HelpCircle, Loader2, ImageIcon } from 'lucide-react';
 import { getCachedImage, saveImageToCache } from '../services/imageCache';
 import { generateImage } from '../services/api';
-import { getWordImageUrl, uploadWordImage, saveWordMedia } from '../services/storage';
+import { getWordImageUrl, uploadWordImage } from '../services/storage';
 
 function FlipCard({ item, ttsProvider, availableProviders, flippedAll, studyRecordId }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -96,31 +96,11 @@ ABSOLUTELY PROHIBITED:
           await saveImageToCache(word, imageBase64);
           console.log(`✅ 图片生成成功: ${word}`);
           
-          // 2. 上传到云端（直接内联，不使用单独函数）
+          // 2. 上传到云端（简化版，只传 Storage）
           if (studyRecordId) {
-            console.log(`☁️ 开始上传: ${word}`);
-            
-            // 上传图片到 Storage
+            console.log(`☁️ 上传: ${word}`);
             const imageUrl = await uploadWordImage(word, imageBase64, studyRecordId);
-            console.log(`☁️ Storage返回: ${imageUrl ? '成功' : '失败'}`);
-            
-            if (imageUrl) {
-              // 保存到数据库
-              const mediaResult = await saveWordMedia({
-                word: word.toLowerCase(),
-                study_record_id: studyRecordId,
-                image_url: imageUrl,
-                image_generated_at: new Date().toISOString(),
-                meaning: item.meaning || '',
-                word_type: item.word_type || 'noun',
-                synonyms: item.synonyms || [],
-                antonyms: item.antonyms || [],
-                practice_sentences: item.practice_sentences || [],
-                memory_tip: item.memory_tip || '',
-                sentence: item.sentence || ''
-              });
-              console.log(`☁️ 数据库返回: ${mediaResult ? '成功' : '失败'}`);
-            }
+            console.log(`☁️ 结果: ${imageUrl ? '成功' : '失败'}`);
           }
         } catch (error) {
           if (error.name === 'AbortError') {
