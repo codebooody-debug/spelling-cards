@@ -32,7 +32,7 @@ export async function uploadWordImage(word, base64Image, studyRecordId) {
     // 解析 base64
     const match = base64Image.match(/^data:(image\/\w+);base64,(.+)$/);
     if (!match) {
-      console.error('[上传] 格式错误');
+      console.error('[上传] 格式错误:', base64Image.substring(0, 50));
       return null;
     }
 
@@ -42,12 +42,21 @@ export async function uploadWordImage(word, base64Image, studyRecordId) {
     
     // 文件路径
     const fileName = `${user.id}/${studyRecordId}/${word.toLowerCase()}.${extension}`;
+    console.log(`[上传] 文件名: ${fileName}`);
     
-    // base64 转 Uint8Array
-    const byteCharacters = atob(base64Data);
-    const byteArray = new Uint8Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteArray[i] = byteCharacters.charCodeAt(i);
+    // base64 转 Uint8Array - 使用更安全的方法
+    let byteArray;
+    try {
+      const binaryString = window.atob(base64Data);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      byteArray = bytes;
+      console.log(`[上传] 转换成功: ${byteArray.length} bytes`);
+    } catch (e) {
+      console.error('[上传] base64转换失败:', e.message);
+      return null;
     }
 
     // 上传
