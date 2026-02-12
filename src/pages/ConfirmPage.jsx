@@ -1,9 +1,10 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../components/Toast';
-import { ArrowLeft, Check, Edit2, Sparkles, Loader2, School, Calendar, Hash, Type, BookOpen } from 'lucide-react';
+import { ArrowLeft, Check, Edit2, Sparkles, Loader2, School, Calendar, Hash, Type, BookOpen, ImageIcon } from 'lucide-react';
 import { useState } from 'react';
-import { enrichWordsBatch } from '../services/api';
+import { enrichWordsBatch, generateImage } from '../services/api';
+import { uploadWordImage, saveWordMedia } from '../services/storage';
 
 export default function ConfirmPage() {
   const location = useLocation();
@@ -14,6 +15,7 @@ export default function ConfirmPage() {
   const { recognizedData } = location.state || {};
 
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState({ current: 0, total: 0, stage: '' });
   const [editableData, setEditableData] = useState({
     grade: recognizedData?.grade || 'P3',
     term: recognizedData?.term || 'Term 1',
@@ -51,9 +53,11 @@ export default function ConfirmPage() {
 
   const handleConfirm = async () => {
     setIsGenerating(true);
+    const totalWords = extractedSentences.length;
+    setGenerationProgress({ current: 0, total: totalWords, stage: ' enriching_words' });
 
     try {
-      // 使用批量处理 API，限制并发数为 3
+      // 第一步：批量生成单词信息（释义、同义词、反义词等）
       const enrichedResults = await enrichWordsBatch(
         extractedSentences.map(item => ({
           word: item.word,
@@ -63,12 +67,12 @@ export default function ConfirmPage() {
         {
           concurrency: 3,
           onProgress: (word, success) => {
-            console.log(`单词 ${word} 处理${success ? '成功' : '失败'}`);
+            console.log(`单词 ${word} 信息${success ? '成功' : '失败'}`);
           }
         }
       );
-      
-      // 组合数据
+
+      // 第二步：创建学习记录
       const items = extractedSentences.map((item, index) => ({
         id: index + 1,
         target_word: item.word,
@@ -94,12 +98,62 @@ export default function ConfirmPage() {
         }
       });
 
+      // 第三步：为每个单词生成图片并上传到 Supabase
+      setGenerationProgress({ current: 0, total: totalWords, stage: 'generating_images' });
+
+      for (let i = 0; i < extractedSentences.length; i++) {
+        const item = extractedSentences[i];
+        const enrichedData = enrichedResults[i].data;
+
+        setGenerationProgress({ current: i + 1, total: totalWords, stage: 'generating_images' });
+
+        try {
+          // 生成图片
+          const prompt = `Simple, clean illustration depicting "${item.word}" based on this context: "${item.sentence}". 
+Minimal design with one clear focal point. 
+Soft pastel colors, white background, no text, no cluttered elements. 
+Focus on showing the exact meaning of the word in a clear, uncluttered scene suitable for children to understand.`;
+
+          const imageResult = await generateImage(prompt, 1024, 1024);
+          const imageBase64 = `data:${imageResult.mimeType};base64,${imageResult.imageBase64}`;
+
+          // 上传图片到 Supabase
+          const imageUrl = await uploadWordImage(item.word, imageBase64, newRecord.id);
+
+          // 保存单词媒体信息到数据库
+          await saveWordMedia({
+            word: item.word.toLowerCase(),
+            study_record_id: newRecord.id,
+            image_url: imageUrl,
+            image_generated_at: new Date().toISOString(),
+            meaning: enrichedData.meaning,
+            word_type: enrichedData.wordType,
+            synonyms: enrichedData.synonyms,
+            antonyms: enrichedData.antonyms,
+            practice_sentences: enrichedData.practiceSentences,
+            memory_tip: enrichedData.memoryTip,
+            sentence: item.sentence
+          });
+
+          console.log(`✅ 单词 ${item.word} 图片生成并上传成功`);
+        } catch (error) {
+          console.error(`❌ 单词 ${item.word} 图片生成失败:`, error);
+          // 继续处理下一个，不中断流程
+        }
+
+        // 添加小延迟避免请求过快
+        if (i < extractedSentences.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+      }
+
       navigate(`/study/${newRecord.id}`);
       success('学习卡片生成成功');
     } catch (err) {
       console.error('生成失败:', err);
       showError('生成学习卡片失败: ' + err.message);
       setIsGenerating(false);
+      setGenerationProgress({ current: 0, total: 0, stage: '' });
     }
   };
 
@@ -258,16 +312,25 @@ export default function ConfirmPage() {
             </div>
           </div>
 
-          {/* 操作按钮 */}
           <div className="flex gap-3 pt-4">
-            <button onClick={() => navigate('/')} className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors">重新上传</button>
+            <button onClick={() => navigate('/')} disabled={isGenerating} className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50">重新上传</button>
             <button
               onClick={handleConfirm}
               disabled={isGenerating}
               className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 font-medium"
             >
               {isGenerating ? (
-                <><Loader2 size={18} className="animate-spin" />AI生成单词信息中...</>
+                <>
+                  <Loader2 size={18} className="animate-spin" />
+                  {generationProgress.stage === 'generating_images' ? (
+                    <>
+                      <ImageIcon size={16} />
+                      生成图片中 {generationProgress.current}/{generationProgress.total}...
+                    </>
+                  ) : (
+                    <>AI生成单词信息中...</>
+                  )}
+                </>
               ) : (
                 <><Check size={18} />确认并生成卡片</>
               )}

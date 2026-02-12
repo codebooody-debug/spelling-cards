@@ -158,6 +158,7 @@ function StudyPage() {
                 ttsProvider={ttsProvider} 
                 availableProviders={availableProviders}
                 flippedAll={flippedAll}
+                studyRecordId={contentId}
               />
             ))}
           </div>

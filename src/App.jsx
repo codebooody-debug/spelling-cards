@@ -1,8 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { ToastProvider } from './components/Toast';
 import ErrorBoundary from './components/ErrorBoundary';
+import { initializeStorage } from './services/init';
 import './App.css';
 
 // 懒加载页面组件
@@ -22,6 +23,11 @@ const PageLoader = () => (
 );
 
 function App() {
+  // 初始化 Storage buckets
+  useEffect(() => {
+    initializeStorage();
+  }, []);
+
   return (
     <ErrorBoundary>
       <ToastProvider>
