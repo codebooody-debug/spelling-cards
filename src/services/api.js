@@ -9,13 +9,7 @@ async function callEdgeFunction(functionName, body, options = {}) {
   const { timeout = 30000, retries = 1 } = options;
   
   if (!isSupabaseConfigured()) {
-    // 本地开发模式
-    const response = await fetch(`http://localhost:3003/api/${functionName}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
-    return await response.json();
+    throw new Error('Supabase 未配置，无法调用 Edge Functions');
   }
   
   // Supabase Edge Function 调用
