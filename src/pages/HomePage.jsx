@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../components/Toast';
-import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp } from 'lucide-react';
+import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp, LogOut, User } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { extractSpelling } from '../services/api';
+import { getSupabase } from '../lib/supabase';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -13,6 +14,28 @@ export default function HomePage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef(null);
+  const [user, setUser] = useState(null);
+
+  // 获取当前用户信息
+  useEffect(() => {
+    const getUser = async () => {
+      const supabase = getSupabase();
+      if (supabase) {
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
+      }
+    };
+    getUser();
+  }, []);
+
+  // 登出
+  const handleLogout = async () => {
+    const supabase = getSupabase();
+    if (supabase) {
+      await supabase.auth.signOut();
+      navigate('/login');
+    }
+  };
 
   // 按 Term 分组 - 使用 useMemo 优化性能
   const groupedByTerm = useMemo(() => {
@@ -203,7 +226,7 @@ export default function HomePage() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-gray-200">
         <div className="px-4 py-4">
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="bg-blue-500 p-3 rounded-xl">
                 <span className="text-2xl">📝</span>
@@ -214,6 +237,23 @@ export default function HomePage() {
                   {hasRecords ? `已保存 ${studyRecords.length} 个听写记录` : '拍照或上传听写照片开始学习'}
                 </p>
               </div>
+            </div>
+            
+            {/* 用户信息 + 登出 */}
+            <div className="flex items-center gap-3">
+              {user && (
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <User size={16} />
+                  <span className="hidden sm:inline">{user.email}</span>
+                </div>
+              )}
+              <button
+                onClick={handleLogout}
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                title="退出登录"
+              >
+                <LogOut size={20} />
+              </button>
             </div>
           </div>
         </div>
