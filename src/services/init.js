@@ -5,6 +5,12 @@ import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 
 const BUCKETS = [
   {
+    name: 'spelling-images',
+    public: true,
+    fileSizeLimit: 10485760, // 10MB
+    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/webp']
+  },
+  {
     name: 'word-images',
     public: true,
     fileSizeLimit: 5242880, // 5MB
