@@ -86,8 +86,14 @@ export function AppProvider({ children }) {
       // 上传图片到 Storage（如果有）
       let imageUrl = null;
       if (record.sourceImage) {
-        const fileName = `${user.id}/${Date.now()}.jpg`;
-        console.log('[创建学习记录] 上传图片:', fileName);
+        const timestamp = Date.now();
+        const folderName = user.id;
+        const fileName = `${timestamp}.jpg`;
+        const fullPath = `${folderName}/${fileName}`;
+        
+        console.log('[创建学习记录] 上传图片:', fullPath);
+        console.log('[创建学习记录] 文件夹:', folderName);
+        console.log('[创建学习记录] 文件名:', fileName);
         
         // 将 base64 转换为 Blob
         let imageBlob;
@@ -104,22 +110,37 @@ export function AppProvider({ children }) {
           imageBlob = record.sourceImage;
         }
         
-        const { error: uploadError } = await supabase.storage
+        console.log('[创建学习记录] 图片Blob大小:', imageBlob.size, 'bytes');
+        
+        // 先确保文件夹存在（列出文件夹内容）
+        const { data: folderExists } = await supabase.storage
           .from('spelling-images')
-          .upload(fileName, imageBlob, {
+          .list(folderName);
+        
+        console.log('[创建学习记录] 文件夹存在:', !!folderExists);
+        
+        // 上传文件
+        const { error: uploadError, data: uploadData } = await supabase.storage
+          .from('spelling-images')
+          .upload(fullPath, imageBlob, {
             contentType: 'image/jpeg',
             upsert: false
           });
         
         if (uploadError) {
           console.error('[创建学习记录] 图片上传失败:', uploadError.message);
+          console.error('[创建学习记录] 上传错误详情:', uploadError);
           // 继续，不阻断流程
         } else {
-          const { data: { publicUrl } } = supabase.storage
+          console.log('[创建学习记录] 图片上传成功:', uploadData);
+          
+          // 获取公共URL
+          const { data: urlData } = supabase.storage
             .from('spelling-images')
-            .getPublicUrl(fileName);
-          imageUrl = publicUrl;
-          console.log('[创建学习记录] 图片上传成功:', imageUrl);
+            .getPublicUrl(fullPath);
+          
+          imageUrl = urlData.publicUrl;
+          console.log('[创建学习记录] 图片URL:', imageUrl);
         }
       }
 
