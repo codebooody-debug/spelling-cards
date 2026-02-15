@@ -26,7 +26,7 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
     const loadImage = async () => {
       const word = item.target_word;
       
-      console.log(`[FlipCard] loadImage开始: word=${word}, studyRecordId=${studyRecordId}`);
+      console.log(`[FlipCard] loadImage开始: word=${word}, studyRecordId=${studyRecordId}, hasGenerated=${hasGeneratedRef.current}, isGenerating=${isGeneratingImage}`);
       
       // 步骤1: 优先从 Supabase 云端加载
       if (studyRecordId) {
@@ -35,18 +35,17 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
           const cloudUrl = await getWordImageUrl(word, studyRecordId);
           if (cloudUrl) {
             setWordImage(cloudUrl);
-            // 同时缓存到本地 IndexedDB
             await saveImageToCache(word, cloudUrl);
-            console.log(`☁️ 从云端加载图片: ${word}`);
+            console.log(`☁️ 从云端加载图片成功: ${word}`);
             return;
           } else {
-            console.log(`[FlipCard] 云端无图片: ${word}`);
+            console.log(`[FlipCard] 云端无图片，需要生成: ${word}`);
           }
         } catch (error) {
-          console.log(`云端加载失败 (${word}), 尝试本地缓存:`, error);
+          console.log(`[FlipCard] 云端加载失败 (${word}):`, error.message);
         }
       } else {
-        console.warn(`[FlipCard] studyRecordId为空，跳过云端加载: ${word}`);
+        console.warn(`[FlipCard] ⚠️ studyRecordId为空: ${word}`);
       }
       
       // 步骤2: 从本地 IndexedDB 加载
@@ -60,12 +59,17 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
       }
       
       // 步骤3: 如果没有缓存，生成新图片
-      if (hasGeneratedRef.current || isGeneratingImage) {
-        console.log(`[FlipCard] 跳过生成: hasGenerated=${hasGeneratedRef.current}, isGenerating=${isGeneratingImage}`);
+      if (hasGeneratedRef.current) {
+        console.log(`[FlipCard] 已生成过图片，跳过: ${word}`);
         return;
       }
       
-      console.log(`[FlipCard] 开始生成新图片: ${word}`);
+      if (isGeneratingImage) {
+        console.log(`[FlipCard] 正在生成中，跳过: ${word}`);
+        return;
+      }
+      
+      console.log(`[FlipCard] 🎨 开始生成新图片: ${word}`);
       hasGeneratedRef.current = true;
       setIsGeneratingImage(true);
       setImageError(null);
