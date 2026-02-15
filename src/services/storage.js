@@ -121,8 +121,82 @@ export async function getWordImageUrl(word, studyRecordId) {
   }
 }
 
-// 保留空函数兼容旧代码
+/**
+ * 保存单词媒体信息到数据库
+ * @param {Object} mediaData - 媒体数据
+ * @param {string} mediaData.word - 单词
+ * @param {string} mediaData.studyRecordId - 学习记录ID
+ * @param {string} mediaData.imageUrl - 图片URL
+ * @param {string} mediaData.meaning - 中文释义
+ * @param {string} mediaData.wordType - 词性
+ * @param {string} mediaData.phonetic - 音标
+ * @param {Array} mediaData.synonyms - 同义词数组
+ * @param {Array} mediaData.antonyms - 反义词数组
+ * @param {Array} mediaData.practiceSentences - 练习例句
+ * @param {string} mediaData.memoryTip - 记忆技巧
+ * @param {string} mediaData.sentence - 原句子
+ */
 export async function saveWordMedia(mediaData) {
-  console.log('[保存数据库] 已禁用，仅使用 Storage');
-  return null;
+  console.log('[保存数据库] 开始:', mediaData.word);
+  
+  if (!isSupabaseConfigured()) {
+    console.log('[保存数据库] Supabase 未配置');
+    return null;
+  }
+
+  const supabase = getSupabase();
+  if (!supabase) {
+    console.error('[保存数据库] 无客户端');
+    return null;
+  }
+
+  try {
+    // 检查用户
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('[保存数据库] 未登录');
+      return null;
+    }
+
+    // 准备数据
+    const record = {
+      user_id: user.id,
+      word: mediaData.word.toLowerCase(),
+      study_record_id: mediaData.studyRecordId,
+      image_url: mediaData.imageUrl,
+      image_generated_at: new Date().toISOString(),
+      meaning: mediaData.meaning || '',
+      word_type: mediaData.wordType || 'noun',
+      phonetic: mediaData.phonetic || '/fəˈnetɪk/',
+      synonyms: mediaData.synonyms || [],
+      antonyms: mediaData.antonyms || [],
+      practice_sentences: mediaData.practiceSentences || [],
+      memory_tip: mediaData.memoryTip || '',
+      sentence: mediaData.sentence || ''
+    };
+
+    console.log('[保存数据库] 记录:', record);
+
+    // 插入或更新数据库
+    const { data, error } = await supabase
+      .from('word_media')
+      .upsert(record, {
+        onConflict: 'user_id,study_record_id,word',
+        ignoreDuplicates: false
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[保存数据库] 失败:', error.message);
+      return null;
+    }
+
+    console.log('[保存数据库] 成功:', data.id);
+    return data;
+
+  } catch (error) {
+    console.error('[保存数据库] 异常:', error.message);
+    return null;
+  }
 }

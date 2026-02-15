@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Volume2, HelpCircle, Loader2, ImageIcon } from 'lucide-react';
 import { getCachedImage, saveImageToCache } from '../services/imageCache';
 import { generateImage } from '../services/api';
-import { getWordImageUrl, uploadWordImage } from '../services/storage';
+import { getWordImageUrl, uploadWordImage, saveWordMedia } from '../services/storage';
 
 function FlipCard({ item, flippedAll, studyRecordId }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -98,11 +98,38 @@ Generate a consistent, professional educational illustration.`;
           await saveImageToCache(word, imageBase64);
           console.log(`✅ 图片生成成功: ${word}`);
           
-          // 2. 上传到云端（简化版，只传 Storage）
+          // 2. 上传到云端并保存到数据库
           if (studyRecordId) {
-            console.log(`☁️ 上传: ${word}`);
+            console.log(`☁️ 上传图片到 Storage: ${word}`);
             const imageUrl = await uploadWordImage(word, imageBase64, studyRecordId);
-            console.log(`☁️ 结果: ${imageUrl ? '成功' : '失败'}`);
+            
+            if (imageUrl) {
+              console.log(`☁️ 图片上传成功，保存到数据库: ${word}`);
+              
+              // 保存到 word_media 表
+              const mediaData = {
+                word: word,
+                studyRecordId: studyRecordId,
+                imageUrl: imageUrl,
+                meaning: item.meaning || '',
+                wordType: item.word_type || 'noun',
+                phonetic: item.phonetic || '/fəˈnetɪk/',
+                synonyms: item.synonyms || [],
+                antonyms: item.antonyms || [],
+                practiceSentences: item.practice_sentences || item.practiceSentences || [],
+                memoryTip: item.memory_tip || item.memoryTip || '',
+                sentence: item.sentence || ''
+              };
+              
+              const savedMedia = await saveWordMedia(mediaData);
+              if (savedMedia) {
+                console.log(`✅ 数据库记录创建成功: ${word}`);
+              } else {
+                console.error(`❌ 数据库记录创建失败: ${word}`);
+              }
+            } else {
+              console.error(`❌ 图片上传失败: ${word}`);
+            }
           }
         } catch (error) {
           if (error.name === 'AbortError') {
