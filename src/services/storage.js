@@ -1,160 +1,201 @@
-// 简化版 Storage 服务 - 只上传图片到 Storage，不保存到数据库
+// Storage 服务 - 处理图片上传到 Supabase Storage 和数据库保存
 
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 
 const BUCKET_IMAGES = 'word-images';
 
 /**
+ * 将 base64 图片转换为 Blob
+ */
+function base64ToBlob(base64Data, mimeType = 'image/png') {
+  try {
+    // 移除 data URL 前缀
+    const base64 = base64Data.includes(',') 
+      ? base64Data.split(',')[1] 
+      : base64Data;
+    
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    
+    const byteArray = new Uint8Array(byteNumbers);
+    return new Blob([byteArray], { type: mimeType });
+  } catch (error) {
+    console.error('[base64ToBlob] 转换失败:', error);
+    return null;
+  }
+}
+
+/**
  * 上传图片到 Supabase Storage
  */
 export async function uploadWordImage(word, base64Image, studyRecordId) {
-  console.log(`[上传] 开始: ${word}`);
+  console.log(`[uploadWordImage] 开始: word=${word}, studyRecordId=${studyRecordId}`);
   
   if (!isSupabaseConfigured()) {
-    console.log('[上传] Supabase 未配置');
+    console.error('[uploadWordImage] Supabase 未配置');
     return null;
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    console.error('[上传] 无客户端');
+    console.error('[uploadWordImage] 无客户端');
     return null;
   }
 
   try {
     // 检查用户
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error('[上传] 未登录');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('[uploadWordImage] 未登录:', userError?.message);
       return null;
     }
 
     // 解析 base64
-    const match = base64Image.match(/^data:(image\/\w+);base64,(.+)$/);
-    if (!match) {
-      console.error('[上传] 格式错误:', base64Image.substring(0, 50));
-      return null;
+    let mimeType = 'image/png';
+    let base64Data = base64Image;
+    
+    if (base64Image.includes(',')) {
+      const match = base64Image.match(/^data:(image\/\w+);base64,(.+)$/);
+      if (match) {
+        mimeType = match[1];
+        base64Data = match[2];
+      }
     }
-
-    const mimeType = match[1];
-    const base64Data = match[2];
+    
     const extension = mimeType.split('/')[1] || 'png';
     
-    // 文件路径
+    // 文件路径: user-id/study-record-id/word.png
     const fileName = `${user.id}/${studyRecordId}/${word.toLowerCase()}.${extension}`;
-    console.log(`[上传] 文件名: ${fileName}`);
+    console.log(`[uploadWordImage] 文件路径: ${fileName}`);
     
-    // base64 转 Uint8Array - 使用更安全的方法
-    let byteArray;
-    try {
-      const binaryString = window.atob(base64Data);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      byteArray = bytes;
-      console.log(`[上传] 转换成功: ${byteArray.length} bytes`);
-    } catch (e) {
-      console.error('[上传] base64转换失败:', e.message);
+    // 转换为 Blob
+    const imageBlob = base64ToBlob(base64Data, mimeType);
+    if (!imageBlob) {
+      console.error('[uploadWordImage] base64 转换失败');
       return null;
     }
+    
+    console.log(`[uploadWordImage] 图片大小: ${imageBlob.size} bytes`);
 
-    // 上传
-    const { error } = await supabase.storage
+    // 上传到 Storage
+    const { error: uploadError } = await supabase.storage
       .from(BUCKET_IMAGES)
-      .upload(fileName, byteArray, {
+      .upload(fileName, imageBlob, {
         contentType: mimeType,
         upsert: true
       });
 
-    if (error) {
-      console.error('[上传] Storage 失败:', error.message);
+    if (uploadError) {
+      console.error('[uploadWordImage] Storage 上传失败:', uploadError.message);
       return null;
     }
 
-    // 获取 URL
+    // 获取公共 URL
     const { data: { publicUrl } } = supabase.storage
       .from(BUCKET_IMAGES)
       .getPublicUrl(fileName);
 
-    console.log(`[上传] 成功: ${publicUrl}`);
+    console.log(`[uploadWordImage] 成功: ${publicUrl}`);
     return publicUrl;
 
   } catch (error) {
-    console.error(`[上传] 异常:`, error.message);
+    console.error(`[uploadWordImage] 异常:`, error.message);
     return null;
   }
 }
 
 /**
  * 获取图片 URL
- * 先查 Storage，没有再查本地
+ * 先查 Storage，没有再返回 null
  */
 export async function getWordImageUrl(word, studyRecordId) {
-  if (!isSupabaseConfigured()) return null;
+  console.log(`[getWordImageUrl] 查询: word=${word}, studyRecordId=${studyRecordId}`);
+  
+  if (!isSupabaseConfigured()) {
+    console.log('[getWordImageUrl] Supabase 未配置');
+    return null;
+  }
 
   const supabase = getSupabase();
-  if (!supabase) return null;
+  if (!supabase) {
+    console.log('[getWordImageUrl] 无客户端');
+    return null;
+  }
 
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    if (!user) {
+      console.log('[getWordImageUrl] 未登录');
+      return null;
+    }
 
-    const fileName = `${user.id}/${studyRecordId}/${word.toLowerCase()}.png`;
+    const folderPath = `${user.id}/${studyRecordId}`;
     
-    // 检查文件是否存在
-    const { data: exists } = await supabase.storage
+    // 列出文件夹中的文件
+    const { data: files, error: listError } = await supabase.storage
       .from(BUCKET_IMAGES)
-      .list(`${user.id}/${studyRecordId}`);
+      .list(folderPath);
     
-    const file = exists?.find(f => f.name === `${word.toLowerCase()}.png`);
-    if (!file) return null;
+    if (listError) {
+      console.error('[getWordImageUrl] 列出文件失败:', listError.message);
+      return null;
+    }
+    
+    if (!files || files.length === 0) {
+      console.log(`[getWordImageUrl] 文件夹为空: ${folderPath}`);
+      return null;
+    }
+    
+    // 查找匹配的文件
+    const targetFileName = `${word.toLowerCase()}.png`;
+    const file = files.find(f => f.name.toLowerCase() === targetFileName);
+    
+    if (!file) {
+      console.log(`[getWordImageUrl] 文件不存在: ${targetFileName}`);
+      return null;
+    }
 
     // 获取 URL
+    const fileName = `${folderPath}/${file.name}`;
     const { data: { publicUrl } } = supabase.storage
       .from(BUCKET_IMAGES)
       .getPublicUrl(fileName);
 
+    console.log(`[getWordImageUrl] 找到图片: ${publicUrl}`);
     return publicUrl;
+    
   } catch (error) {
+    console.error('[getWordImageUrl] 异常:', error.message);
     return null;
   }
 }
 
 /**
  * 保存单词媒体信息到数据库
- * @param {Object} mediaData - 媒体数据
- * @param {string} mediaData.word - 单词
- * @param {string} mediaData.studyRecordId - 学习记录ID
- * @param {string} mediaData.imageUrl - 图片URL
- * @param {string} mediaData.meaning - 中文释义
- * @param {string} mediaData.wordType - 词性
- * @param {string} mediaData.phonetic - 音标
- * @param {Array} mediaData.synonyms - 同义词数组
- * @param {Array} mediaData.antonyms - 反义词数组
- * @param {Array} mediaData.practiceSentences - 练习例句
- * @param {string} mediaData.memoryTip - 记忆技巧
- * @param {string} mediaData.sentence - 原句子
  */
 export async function saveWordMedia(mediaData) {
-  console.log('[保存数据库] 开始:', mediaData.word);
+  console.log('[saveWordMedia] 开始:', mediaData.word);
   
   if (!isSupabaseConfigured()) {
-    console.log('[保存数据库] Supabase 未配置');
+    console.error('[saveWordMedia] Supabase 未配置');
     return null;
   }
 
   const supabase = getSupabase();
   if (!supabase) {
-    console.error('[保存数据库] 无客户端');
+    console.error('[saveWordMedia] 无客户端');
     return null;
   }
 
   try {
     // 检查用户
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error('[保存数据库] 未登录');
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      console.error('[saveWordMedia] 未登录:', userError?.message);
       return null;
     }
 
@@ -175,7 +216,7 @@ export async function saveWordMedia(mediaData) {
       sentence: mediaData.sentence || ''
     };
 
-    console.log('[保存数据库] 记录:', record);
+    console.log('[saveWordMedia] 准备插入:', record);
 
     // 插入或更新数据库
     const { data, error } = await supabase
@@ -188,15 +229,16 @@ export async function saveWordMedia(mediaData) {
       .single();
 
     if (error) {
-      console.error('[保存数据库] 失败:', error.message);
+      console.error('[saveWordMedia] 数据库失败:', error.message);
+      console.error('[saveWordMedia] 错误详情:', error);
       return null;
     }
 
-    console.log('[保存数据库] 成功:', data.id);
+    console.log('[saveWordMedia] 成功:', data.id);
     return data;
 
   } catch (error) {
-    console.error('[保存数据库] 异常:', error.message);
+    console.error('[saveWordMedia] 异常:', error.message);
     return null;
   }
 }
