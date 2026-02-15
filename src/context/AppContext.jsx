@@ -7,6 +7,7 @@ export function AppProvider({ children }) {
   const [studyRecords, setStudyRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
 
   // 检查登录状态
   useEffect(() => {
@@ -39,13 +40,16 @@ export function AppProvider({ children }) {
           
           if (error) throw error;
           setStudyRecords(data || []);
+          console.log(`[加载数据] 从云端加载 ${data?.length || 0} 条记录`);
         } else {
           // 本地开发模式
           const records = await localStorageDB.getRecords();
           setStudyRecords(records);
+          console.log(`[加载数据] 从本地加载 ${records.length} 条记录`);
         }
       } catch (error) {
-        console.error('加载数据失败:', error);
+        console.error('[加载数据] 失败:', error);
+        setError(error.message);
         // Fallback 到本地存储
         const records = await localStorageDB.getRecords();
         setStudyRecords(records);
@@ -57,94 +61,104 @@ export function AppProvider({ children }) {
     loadData();
   }, [user]);
 
-  // 创建学习记录
+  // 创建学习记录 - 强制云端模式
   const createStudyRecord = async (record) => {
     console.log('[创建学习记录] 开始:', record.title);
     
-    const newRecord = {
-      id: `record-${Date.now()}`,
-      ...record,
-      createdAt: new Date().toISOString()
-    };
-
+    const supabase = getSupabase();
+    
+    // 检查必要条件
+    if (!isSupabaseConfigured()) {
+      throw new Error('Supabase 未配置，请检查环境变量');
+    }
+    
+    if (!supabase) {
+      throw new Error('Supabase 客户端初始化失败');
+    }
+    
+    if (!user) {
+      throw new Error('用户未登录，请先登录');
+    }
+    
     try {
-      const supabase = getSupabase();
-      const configured = isSupabaseConfigured();
-      const hasUser = !!user;
+      console.log('[创建学习记录] 使用云端模式，用户:', user.id);
       
-      console.log('[创建学习记录] 检查:', {
-        supabaseConfigured: configured,
-        hasUser: hasUser,
-        hasSupabaseClient: !!supabase
-      });
-      
-      if (configured && supabase && hasUser) {
-        console.log('[创建学习记录] 使用云端模式');
+      // 上传图片到 Storage（如果有）
+      let imageUrl = null;
+      if (record.sourceImage) {
+        const fileName = `${user.id}/${Date.now()}.jpg`;
+        console.log('[创建学习记录] 上传图片:', fileName);
         
-        // 上传图片到 Storage（如果有）
-        let imageUrl = null;
-        if (record.sourceImage) {
-          const fileName = `${user.id}/${Date.now()}.jpg`;
-          console.log('[创建学习记录] 上传图片:', fileName);
-          
-          const { error: uploadError } = await supabase.storage
-            .from('spelling-images')
-            .upload(fileName, record.sourceImage);
-          
-          if (uploadError) {
-            console.error('[创建学习记录] 图片上传失败:', uploadError.message);
-          } else {
-            const { data: { publicUrl } } = supabase.storage
-              .from('spelling-images')
-              .getPublicUrl(fileName);
-            imageUrl = publicUrl;
-            console.log('[创建学习记录] 图片上传成功:', imageUrl);
+        // 将 base64 转换为 Blob
+        let imageBlob;
+        if (record.sourceImage.startsWith('data:')) {
+          const base64Data = record.sourceImage.split(',')[1];
+          const byteCharacters = atob(base64Data);
+          const byteNumbers = new Array(byteCharacters.length);
+          for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
           }
-        }
-
-        // 准备数据库记录
-        const dbRecord = {
-          user_id: user.id,
-          grade: record.grade,
-          term: record.term,
-          spelling_number: record.spellingNumber,
-          subject: record.subject,
-          title: record.title,
-          source_image_url: imageUrl,
-          content: record.content,
-        };
-        
-        console.log('[创建学习记录] 准备插入数据库:', dbRecord);
-
-        // 保存到数据库
-        const { data, error } = await supabase
-          .from('study_records')
-          .insert([dbRecord])
-          .select()
-          .single();
-        
-        if (error) {
-          console.error('[创建学习记录] 数据库插入失败:', error.message);
-          throw error;
+          const byteArray = new Uint8Array(byteNumbers);
+          imageBlob = new Blob([byteArray], { type: 'image/jpeg' });
+        } else {
+          imageBlob = record.sourceImage;
         }
         
-        console.log('[创建学习记录] 数据库插入成功:', data.id);
+        const { error: uploadError } = await supabase.storage
+          .from('spelling-images')
+          .upload(fileName, imageBlob, {
+            contentType: 'image/jpeg',
+            upsert: false
+          });
         
-        setStudyRecords([data, ...studyRecords]);
-        return data;
-      } else {
-        console.log('[创建学习记录] 使用本地模式 (无法跨设备同步)');
-        // 本地模式
-        setStudyRecords([newRecord, ...studyRecords]);
-        await localStorageDB.saveRecord(newRecord);
-        return newRecord;
+        if (uploadError) {
+          console.error('[创建学习记录] 图片上传失败:', uploadError.message);
+          // 继续，不阻断流程
+        } else {
+          const { data: { publicUrl } } = supabase.storage
+            .from('spelling-images')
+            .getPublicUrl(fileName);
+          imageUrl = publicUrl;
+          console.log('[创建学习记录] 图片上传成功:', imageUrl);
+        }
       }
-    } catch (error) {
-      console.error('[创建学习记录] 错误:', error.message);
-      console.error('[创建学习记录] 错误详情:', error);
+
+      // 准备数据库记录
+      const dbRecord = {
+        user_id: user.id,
+        grade: record.grade,
+        term: record.term,
+        spelling_number: record.spellingNumber,
+        subject: record.subject,
+        title: record.title,
+        source_image_url: imageUrl,
+        content: record.content,
+      };
       
-      // 显示错误给用户，而不是静默fallback
-      throw new Error(`保存学习记录失败: ${error.message}`);
+      console.log('[创建学习记录] 插入数据库:', dbRecord);
+
+      // 保存到数据库
+      const { data, error: insertError } = await supabase
+        .from('study_records')
+        .insert([dbRecord])
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('[创建学习记录] 数据库插入失败:', insertError);
+        throw new Error(`数据库插入失败: ${insertError.message}`);
+      }
+      
+      console.log('[创建学习记录] 成功，ID:', data.id);
+      
+      // 更新本地状态
+      setStudyRecords(prev => [data, ...prev]);
+      
+      return data;
+      
+    } catch (error) {
+      console.error('[创建学习记录] 错误:', error);
+      throw error;
     }
   };
 
@@ -165,7 +179,8 @@ export function AppProvider({ children }) {
       setStudyRecords(studyRecords.filter(r => r.id !== recordId));
       await localStorageDB.deleteRecord(recordId);
     } catch (error) {
-      console.error('删除失败:', error);
+      console.error('[删除学习记录] 失败:', error);
+      throw error;
     }
   };
 
@@ -220,6 +235,7 @@ export function AppProvider({ children }) {
     studyRecords,
     isLoading,
     user,
+    error,
     isSupabaseConfigured: isSupabaseConfigured(),
     createStudyRecord,
     deleteStudyRecord,
@@ -238,7 +254,7 @@ export function AppProvider({ children }) {
   );
 }
 
-export function useApp() { // eslint-disable-line react-refresh/only-export-components
+export function useApp() {
   const context = useContext(AppContext);
   if (!context) {
     throw new Error('useApp must be used within AppProvider');

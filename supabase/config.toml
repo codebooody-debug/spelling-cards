@@ -9,3 +9,21 @@ verify_jwt = false
 
 [functions.enrich-word]
 verify_jwt = false
+
+[functions.create-buckets]
+verify_jwt = false
+
+[functions.init-buckets]
+verify_jwt = false
+
+[functions.setup-storage-final]
+verify_jwt = false
+
+[functions.fix-storage-permissions]
+verify_jwt = false
+
+[functions.list-buckets]
+verify_jwt = false
+
+[functions.test-upload]
+verify_jwt = false
