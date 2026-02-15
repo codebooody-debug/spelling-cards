@@ -3,6 +3,7 @@ import { Volume2, HelpCircle, Loader2, ImageIcon } from 'lucide-react';
 import { getCachedImage, saveImageToCache } from '../services/imageCache';
 import { generateImage } from '../services/api';
 import { getWordImageUrl, uploadWordImage, saveWordMedia } from '../services/storage';
+import { playTTS } from '../services/tts';
 
 function FlipCard({ item, flippedAll, studyRecordId }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -11,7 +12,7 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
   const [wordImage, setWordImage] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageError, setImageError] = useState(null);
-  
+
   const hasGeneratedRef = useRef(false);
 
   // 监听 flippedAll 变化，重置卡片状态
@@ -25,9 +26,9 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
   useEffect(() => {
     const loadImage = async () => {
       const word = item.target_word;
-      
+
       console.log(`[FlipCard] loadImage开始: word=${word}, studyRecordId=${studyRecordId}, hasGenerated=${hasGeneratedRef.current}, isGenerating=${isGeneratingImage}`);
-      
+
       // 步骤1: 优先从 Supabase 云端加载
       if (studyRecordId) {
         console.log(`[FlipCard] 尝试从云端加载: ${word}`);
@@ -47,7 +48,7 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
       } else {
         console.warn(`[FlipCard] ⚠️ studyRecordId为空: ${word}`);
       }
-      
+
       // 步骤2: 从本地 IndexedDB 加载
       console.log(`[FlipCard] 尝试从本地缓存加载: ${word}`);
       const cachedImage = await getCachedImage(word);
@@ -57,25 +58,25 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
         hasGeneratedRef.current = true;
         return;
       }
-      
+
       // 步骤3: 如果没有缓存，生成新图片
       if (hasGeneratedRef.current) {
         console.log(`[FlipCard] 已生成过图片，跳过: ${word}`);
         return;
       }
-      
+
       if (isGeneratingImage) {
         console.log(`[FlipCard] 正在生成中，跳过: ${word}`);
         return;
       }
-      
+
       console.log(`[FlipCard] 🎨 开始生成新图片: ${word}`);
       hasGeneratedRef.current = true;
       setIsGeneratingImage(true);
       setImageError(null);
-      
+
       const abortController = new AbortController();
-      
+
       const generateWordImage = async () => {
         try {
           const sentence = item.sentence || '';
@@ -103,31 +104,31 @@ TECHNICAL SPECIFICATIONS:
 CONTEXT: "${sentence}"
 
 Generate a consistent, professional educational illustration.`;
-          
+
           const data = await generateImage(prompt, 1024, 1024);
-          
+
           if (abortController.signal.aborted) return;
-          
+
           const imageBase64 = `data:${data.mimeType};base64,${data.imageBase64}`;
-          
+
           // 1. 立即显示本地图片
           setWordImage(imageBase64);
           await saveImageToCache(word, imageBase64);
           console.log(`✅ 图片生成成功: ${word}`);
-          
+
           // 2. 上传到云端并保存到数据库
           console.log(`[FlipCard] 准备上传，studyRecordId=${studyRecordId}`);
-          
+
           if (studyRecordId) {
             console.log(`☁️ 上传图片到 Storage: ${word}`);
-            
+
             try {
               const imageUrl = await uploadWordImage(word, imageBase64, studyRecordId);
-              
+
               if (imageUrl) {
                 console.log(`☁️ 图片上传成功，保存到数据库: ${word}`);
                 console.log(`☁️ 图片URL: ${imageUrl}`);
-                
+
                 // 保存到 word_media 表
                 const mediaData = {
                   word: word,
@@ -142,9 +143,9 @@ Generate a consistent, professional educational illustration.`;
                   memoryTip: item.memory_tip || item.memoryTip || '',
                   sentence: item.sentence || ''
                 };
-                
+
                 console.log(`[FlipCard] 准备保存word_media:`, mediaData);
-                
+
                 const savedMedia = await saveWordMedia(mediaData);
                 if (savedMedia) {
                   console.log(`✅ 数据库记录创建成功: ${word}, ID=${savedMedia.id}`);
@@ -173,53 +174,16 @@ Generate a consistent, professional educational illustration.`;
           setIsGeneratingImage(false);
         }
       };
-      
+
       generateWordImage();
-      
+
       return () => {
         abortController.abort();
       };
     };
-    
+
     loadImage();
   }, [item.target_word, studyRecordId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // 浏览器原生语音合成
-  const playBrowserTTS = useCallback((text) => {
-    if (!window.speechSynthesis) {
-      console.warn('浏览器不支持语音合成');
-      return false;
-    }
-    try {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'en-US';
-      utterance.rate = 0.85;
-      utterance.pitch = 1;
-      
-      // 尝试选择更好的语音
-      const voices = window.speechSynthesis.getVoices();
-      const preferredVoice = voices.find(v => 
-        v.name.includes('Google US English') || 
-        v.name.includes('Samantha') ||
-        v.lang === 'en-US'
-      );
-      if (preferredVoice) utterance.voice = preferredVoice;
-      
-      utterance.onstart = () => setIsPlaying(true);
-      utterance.onend = () => setIsPlaying(false);
-      utterance.onerror = (e) => {
-        console.error('TTS 错误:', e);
-        setIsPlaying(false);
-      };
-      
-      window.speechSynthesis.speak(utterance);
-      return true;
-    } catch (error) {
-      console.error('浏览器 TTS 失败:', error);
-      return false;
-    }
-  }, []);
 
   // 播放语音
   const playAudio = useCallback(async (e, text) => {
@@ -227,19 +191,20 @@ Generate a consistent, professional educational illustration.`;
     if (isPlaying || isLoading) return;
     
     setIsLoading(true);
-    
+    setIsPlaying(true);
+
     try {
-      const success = playBrowserTTS(text);
-      if (!success) {
-        throw new Error('浏览器语音合成不可用');
-      }
+      await playTTS(text, {
+        rate: 0.9,
+        lang: 'en-US'
+      });
     } catch (error) {
       console.error('播放失败:', error.message);
-      // 静默失败，不弹 alert 打扰用户
     } finally {
       setIsLoading(false);
+      setIsPlaying(false);
     }
-  }, [playBrowserTTS, isPlaying, isLoading]);
+  }, [isPlaying, isLoading]);
 
   const handleFlip = () => setIsFlipped(!isFlipped);
 
@@ -262,15 +227,15 @@ Generate a consistent, professional educational illustration.`;
   };
 
   return (
-    <div 
+    <div
       className={`card-container min-h-[550px] h-auto max-h-[800px] cursor-pointer ${isFlipped ? 'flipped' : ''}`}
       onClick={handleFlip}
     >
       <div className="card-inner relative w-full h-full">
-        
+
         {/* 正面 */}
         <div className="card-front absolute w-full h-full bg-white rounded-2xl shadow border border-gray-200 p-4 flex flex-col overflow-hidden">
-          
+
           {/* 顶部：单词信息 */}
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
@@ -298,7 +263,7 @@ Generate a consistent, professional educational illustration.`;
               </button>
             </div>
           </div>
-          
+
           {/* 图片区域 - 统一尺寸和样式 */}
           <div className="rounded-2xl w-[260px] h-[260px] mx-auto flex items-center justify-center mb-3 shrink-0 overflow-hidden bg-white border-2 border-gray-100">
             {isGeneratingImage ? (
@@ -307,16 +272,16 @@ Generate a consistent, professional educational illustration.`;
                 <span className="text-sm">生成图片中...</span>
               </div>
             ) : wordImage ? (
-              <img 
-                src={wordImage} 
+              <img
+                src={wordImage}
                 alt={item.target_word}
                 className="w-full h-full object-cover rounded-xl"
-                style={{ 
+                style={{
                   aspectRatio: '1/1',
                   objectFit: 'cover',
                   objectPosition: 'center'
                 }}
-                onError={() => setImageError('图片加载失败')} 
+                onError={() => setImageError('图片加载失败')}
               />
             ) : imageError ? (
               <div className="flex flex-col items-center text-gray-400">
