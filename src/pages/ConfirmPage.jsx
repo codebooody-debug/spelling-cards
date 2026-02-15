@@ -25,6 +25,13 @@ export default function ConfirmPage() {
   // 使用 Gemini 识别的真实数据，如果没有则使用默认数据
   const extractedSentences = recognizedData?.extractedSentences?.length > 0 
     ? recognizedData.extractedSentences 
+      .filter(item => item.sentence && item.word) // 过滤掉无效项目
+      .map(item => ({
+        // 确保始终使用完整句子，而不是填空句子
+        word: item.word,
+        sentence: item.sentence, // 始终使用完整句子
+        blanked: item.blanked || item.sentence.replace(new RegExp(item.word, 'gi'), '_______') // 如果没有填空句，则自动生成
+      }))
     : [
         {
           word: 'souvenir',

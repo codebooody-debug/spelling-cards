@@ -288,8 +288,17 @@ export default function HomePage() {
                       <div className="space-y-3">
                         {termGroup.records
                           .sort((a, b) => {
-                            const numA = parseInt(a.spellingNumber?.match(/\d+/)?.[0] || '0');
-                            const numB = parseInt(b.spellingNumber?.match(/\d+/)?.[0] || '0');
+                            // 提取Spelling编号中的数字部分进行排序
+                            const numA = parseInt(a.spellingNumber?.replace(/[^\d]/g, '') || '0');
+                            const numB = parseInt(b.spellingNumber?.replace(/[^\d]/g, '') || '0');
+                            
+                            // 如果无法解析数字，按字母顺序排序
+                            if (isNaN(numA) && isNaN(numB)) {
+                              return (a.spellingNumber || '').localeCompare(b.spellingNumber || '');
+                            }
+                            if (isNaN(numA)) return 1;
+                            if (isNaN(numB)) return -1;
+                            
                             return numA - numB;
                           })
                           .map((record) => (
