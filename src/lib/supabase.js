@@ -32,5 +32,10 @@ export const localStorageDB = {
     const records = await this.getRecords();
     const filtered = records.filter(r => r.id !== id);
     localStorage.setItem('studyRecords', JSON.stringify(filtered));
+  },
+
+  async clearAll() {
+    localStorage.removeItem('studyRecords');
+    console.log('[localStorageDB] 本地存储已清除');
   }
 };
