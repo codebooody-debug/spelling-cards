@@ -13,6 +13,7 @@ const ConfirmPage = lazy(() => import('./pages/ConfirmPage'));
 const TermPage = lazy(() => import('./pages/TermPage'));
 const StudyPage = lazy(() => import('./pages/StudyPage'));
 const LoginPage = lazy(() => import('./pages/LoginPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 // 加载中组件
 const PageLoader = () => (
@@ -91,6 +92,11 @@ function App() {
                 <Route path="/study/:contentId" element={
                   <ProtectedRoute>
                     <StudyPage />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute>
+                    <AdminPage />
                   </ProtectedRoute>
                 } />
                 <Route path="*" element={<Navigate to="/" />} />

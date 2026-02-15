@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { getSupabase, isSupabaseConfigured, localStorageDB } from '../lib/supabase';
+import { clearAllImageCache } from '../services/imageCache';
 
 const AppContext = createContext(null);
 
@@ -338,6 +339,23 @@ export function AppProvider({ children }) {
     setStudyRecords([]);
   };
 
+  // 清除本地缓存
+  const clearLocalCache = async () => {
+    try {
+      // 清除图片缓存
+      await clearAllImageCache();
+      
+      // 清除本地数据库缓存
+      await localStorageDB.clearAll();
+      
+      console.log('[清除缓存] 本地缓存已清除');
+      return { success: true };
+    } catch (error) {
+      console.error('[清除缓存] 失败:', error);
+      return { success: false, error: error.message };
+    }
+  };
+
   const value = {
     studyRecords,
     isLoading,
@@ -351,7 +369,8 @@ export function AppProvider({ children }) {
     getRecordsByGrade,
     signIn,
     signUp,
-    signOut
+    signOut,
+    clearLocalCache
   };
 
   return (
