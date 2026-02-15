@@ -11,7 +11,12 @@ function StudyPage() {
   
   const [flippedAll, setFlippedAll] = useState(false);
 
+  console.log('[StudyPage] contentId:', contentId);
+  console.log('[StudyPage] studyRecords count:', studyRecords.length);
+  
   const record = studyRecords.find(r => r.id === contentId);
+  console.log('[StudyPage] found record:', record ? 'yes' : 'no');
+  
   const spellingData = record?.content;
 
   const resetAll = () => {
