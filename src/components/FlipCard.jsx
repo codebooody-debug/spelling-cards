@@ -62,27 +62,30 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
       const generateWordImage = async () => {
         try {
           const sentence = item.sentence || '';
-          const prompt = `Create a simple, clean illustration of "${word}" based on this context: "${sentence}".
+          const prompt = `Create a clean, minimalist illustration of "${word}" for educational flashcards.
 
-STYLE REQUIREMENTS (STRICT):
-- Pure white background ONLY (#FFFFFF), no gradients, no shadows
-- NO borders, NO frames, NO decorative elements
-- NO text, NO letters, NO numbers, NO watermarks
-- NO black backgrounds, NO dark vignettes
-- Clean, minimal design with single clear subject
-- Soft pastel colors (light blue, light pink, light yellow, light green)
-- Flat illustration style, no 3D effects
-- Centered composition with ample white space around
-- Child-friendly, educational material style
-- The subject should be clearly recognizable and take up 60-80% of the image
+STRICT STYLE GUIDELINES (MUST FOLLOW):
+- Background: Pure white (#FFFFFF) only, no gradients, no shadows, no vignettes
+- Style: Flat 2D vector illustration, no 3D effects, no photorealism
+- Colors: Limited pastel palette - soft blue (#B8D4E3), soft pink (#F4C2C2), soft yellow (#F9E4B7), soft green (#C1E1C1), soft purple (#D4C4E0)
+- Composition: Single centered subject, taking up exactly 65-75% of the image area
+- Subject: Simple, iconic representation of "${word}", immediately recognizable
+- Borders: Absolutely NO borders, frames, or decorative edges
+- Text: Absolutely NO text, letters, numbers, or watermarks
+- Shadows: NO drop shadows, no depth effects, no gradients
+- Complexity: Minimal details, clean lines, geometric shapes preferred
+- Mood: Friendly, educational, suitable for children aged 6-12
+- Consistency: Match the style of children's educational book illustrations
 
-ABSOLUTELY PROHIBITED:
-- Black or dark backgrounds
-- Text or typography of any kind
-- Borders or frames
-- Multiple scattered elements
-- Abstract patterns or textures
-- Drop shadows or depth effects`;
+TECHNICAL SPECIFICATIONS:
+- Aspect ratio: Perfect square (1:1)
+- Resolution: 1024x1024 pixels
+- Format: PNG with transparent or pure white background
+- Centering: Subject perfectly centered both horizontally and vertically
+
+CONTEXT: "${sentence}"
+
+Generate a consistent, professional educational illustration.`;
           
           const data = await generateImage(prompt, 1024, 1024);
           
@@ -239,17 +242,25 @@ ABSOLUTELY PROHIBITED:
             </div>
           </div>
           
-          {/* 图片区域 */}
-          <div className="rounded-2xl w-[260px] h-[260px] mx-auto flex items-center justify-center mb-3 shrink-0 overflow-hidden bg-white">
+          {/* 图片区域 - 统一尺寸和样式 */}
+          <div className="rounded-2xl w-[260px] h-[260px] mx-auto flex items-center justify-center mb-3 shrink-0 overflow-hidden bg-white border-2 border-gray-100">
             {isGeneratingImage ? (
               <div className="flex flex-col items-center text-gray-500">
                 <Loader2 size={32} className="animate-spin mb-2" />
                 <span className="text-sm">生成图片中...</span>
               </div>
             ) : wordImage ? (
-              <img src={wordImage} alt={item.target_word}
-                className="w-full h-full object-contain rounded-2xl"
-                onError={() => setImageError('图片加载失败')} />
+              <img 
+                src={wordImage} 
+                alt={item.target_word}
+                className="w-full h-full object-cover rounded-xl"
+                style={{ 
+                  aspectRatio: '1/1',
+                  objectFit: 'cover',
+                  objectPosition: 'center'
+                }}
+                onError={() => setImageError('图片加载失败')} 
+              />
             ) : imageError ? (
               <div className="flex flex-col items-center text-gray-400">
                 <ImageIcon size={40} className="mb-2" />
