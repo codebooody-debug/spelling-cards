@@ -99,37 +99,50 @@ Generate a consistent, professional educational illustration.`;
           console.log(`✅ 图片生成成功: ${word}`);
           
           // 2. 上传到云端并保存到数据库
+          console.log(`[FlipCard] 准备上传，studyRecordId=${studyRecordId}`);
+          
           if (studyRecordId) {
             console.log(`☁️ 上传图片到 Storage: ${word}`);
-            const imageUrl = await uploadWordImage(word, imageBase64, studyRecordId);
             
-            if (imageUrl) {
-              console.log(`☁️ 图片上传成功，保存到数据库: ${word}`);
+            try {
+              const imageUrl = await uploadWordImage(word, imageBase64, studyRecordId);
               
-              // 保存到 word_media 表
-              const mediaData = {
-                word: word,
-                studyRecordId: studyRecordId,
-                imageUrl: imageUrl,
-                meaning: item.meaning || '',
-                wordType: item.word_type || 'noun',
-                phonetic: item.phonetic || '/fəˈnetɪk/',
-                synonyms: item.synonyms || [],
-                antonyms: item.antonyms || [],
-                practiceSentences: item.practice_sentences || item.practiceSentences || [],
-                memoryTip: item.memory_tip || item.memoryTip || '',
-                sentence: item.sentence || ''
-              };
-              
-              const savedMedia = await saveWordMedia(mediaData);
-              if (savedMedia) {
-                console.log(`✅ 数据库记录创建成功: ${word}`);
+              if (imageUrl) {
+                console.log(`☁️ 图片上传成功，保存到数据库: ${word}`);
+                console.log(`☁️ 图片URL: ${imageUrl}`);
+                
+                // 保存到 word_media 表
+                const mediaData = {
+                  word: word,
+                  studyRecordId: studyRecordId,
+                  imageUrl: imageUrl,
+                  meaning: item.meaning || '',
+                  wordType: item.word_type || 'noun',
+                  phonetic: item.phonetic || '/fəˈnetɪk/',
+                  synonyms: item.synonyms || [],
+                  antonyms: item.antonyms || [],
+                  practiceSentences: item.practice_sentences || item.practiceSentences || [],
+                  memoryTip: item.memory_tip || item.memoryTip || '',
+                  sentence: item.sentence || ''
+                };
+                
+                console.log(`[FlipCard] 准备保存word_media:`, mediaData);
+                
+                const savedMedia = await saveWordMedia(mediaData);
+                if (savedMedia) {
+                  console.log(`✅ 数据库记录创建成功: ${word}, ID=${savedMedia.id}`);
+                } else {
+                  console.error(`❌ 数据库记录创建失败: ${word}`);
+                }
               } else {
-                console.error(`❌ 数据库记录创建失败: ${word}`);
+                console.error(`❌ 图片上传失败，uploadWordImage返回null: ${word}`);
               }
-            } else {
-              console.error(`❌ 图片上传失败: ${word}`);
+            } catch (uploadError) {
+              console.error(`❌ 上传过程出错 (${word}):`, uploadError.message);
+              console.error(uploadError);
             }
+          } else {
+            console.warn(`⚠️ studyRecordId为空，跳过上传: ${word}`);
           }
         } catch (error) {
           if (error.name === 'AbortError') {
