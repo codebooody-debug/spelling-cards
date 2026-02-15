@@ -189,35 +189,30 @@ export function AppProvider({ children }) {
     try {
       const supabase = getSupabase();
       if (isSupabaseConfigured() && supabase && user) {
-        // 1. 删除 word_media 表中的相关记录
-        const { error: mediaError } = await supabase
+        // 1. 先获取记录信息，用于删除Storage文件
+        const { data: recordData } = await supabase
+          .from('study_records')
+          .select('source_image_url')
+          .eq('id', recordId)
+          .single();
+        
+        // 2. 获取word_media记录，用于删除word-images
+        const { data: mediaRecords } = await supabase
           .from('word_media')
-          .delete()
+          .select('image_url')
           .eq('study_record_id', recordId)
           .eq('user_id', user.id);
         
-        if (mediaError) {
-          console.error('[删除学习记录] 删除word_media失败:', mediaError);
-          // 继续删除，不中断流程
-        } else {
-          console.log('[删除学习记录] 已删除相关word_media记录');
-        }
-        
-        // 2. 删除 Storage 中的相关图片文件
-        try {
-          // 首先获取该记录的信息，以便确定要删除哪些文件
-          const { data: recordData } = await supabase
-            .from('study_records')
-            .select('source_image_url')
-            .eq('id', recordId)
-            .single();
-          
-          if (recordData && recordData.source_image_url) {
-            // 从URL中提取文件路径并删除
+        // 3. 删除 spelling-images 中的原始图片
+        if (recordData && recordData.source_image_url) {
+          try {
             const url = new URL(recordData.source_image_url);
             const pathParts = url.pathname.split('/');
             const fileName = pathParts[pathParts.length - 1];
-            const filePath = `${user.id}/${fileName}`;
+            const folderName = pathParts[pathParts.length - 2]; // 用户ID文件夹
+            const filePath = `${folderName}/${fileName}`;
+            
+            console.log('[删除学习记录] 尝试删除spelling-images:', filePath);
             
             const { error: storageError } = await supabase.storage
               .from('spelling-images')
@@ -228,53 +223,59 @@ export function AppProvider({ children }) {
             } else {
               console.log('[删除学习记录] 已删除spelling-images:', filePath);
             }
+          } catch (urlError) {
+            console.error('[删除学习记录] 解析source_image_url失败:', recordData.source_image_url, urlError);
           }
-        } catch (storageFetchError) {
-          console.error('[删除学习记录] 获取记录信息用于删除Storage文件时出错:', storageFetchError);
         }
         
-        // 3. 删除 word-images 中的文件（如果存在）
-        try {
-          const { data: mediaRecords } = await supabase
-            .from('word_media')
-            .select('image_url')
-            .eq('study_record_id', recordId)
-            .eq('user_id', user.id);
+        // 4. 删除 word-images 中的AI生成图片
+        if (mediaRecords && mediaRecords.length > 0) {
+          const filesToDelete = [];
+          for (const media of mediaRecords) {
+            if (media.image_url) {
+              try {
+                const url = new URL(media.image_url);
+                const pathParts = url.pathname.split('/');
+                const fileName = pathParts[pathParts.length - 1];
+                const folderName = pathParts[pathParts.length - 3]; // 用户ID
+                const recordFolder = pathParts[pathParts.length - 2]; // 记录ID
+                const filePath = `${folderName}/${recordFolder}/${fileName}`;
+                filesToDelete.push(filePath);
+              } catch (urlError) {
+                console.error('[删除学习记录] 解析image_url失败:', media.image_url, urlError);
+              }
+            }
+          }
           
-          if (mediaRecords && mediaRecords.length > 0) {
-            const filesToDelete = [];
-            for (const media of mediaRecords) {
-              if (media.image_url) {
-                try {
-                  const url = new URL(media.image_url);
-                  const pathParts = url.pathname.split('/');
-                  const fileName = pathParts[pathParts.length - 1];
-                  const folderPath = pathParts.slice(pathParts.length - 2, pathParts.length - 1)[0];
-                  const filePath = `${user.id}/${recordId}/${fileName}`;
-                  filesToDelete.push(filePath);
-                } catch (urlError) {
-                  console.error('[删除学习记录] 解析image_url失败:', media.image_url, urlError);
-                }
-              }
-            }
+          if (filesToDelete.length > 0) {
+            console.log('[删除学习记录] 尝试删除word-images:', filesToDelete);
             
-            if (filesToDelete.length > 0) {
-              const { error: wordImageError } = await supabase.storage
-                .from('word-images')
-                .remove(filesToDelete);
-              
-              if (wordImageError) {
-                console.error('[删除学习记录] 删除word-images失败:', wordImageError);
-              } else {
-                console.log('[删除学习记录] 已删除word-images:', filesToDelete);
-              }
+            const { error: wordImageError } = await supabase.storage
+              .from('word-images')
+              .remove(filesToDelete);
+            
+            if (wordImageError) {
+              console.error('[删除学习记录] 删除word-images失败:', wordImageError);
+            } else {
+              console.log('[删除学习记录] 已删除word-images:', filesToDelete);
             }
           }
-        } catch (wordImageError) {
-          console.error('[删除学习记录] 删除word-images时出错:', wordImageError);
         }
         
-        // 4. 删除 study_records 表中的记录
+        // 5. 删除 word_media 表中的相关记录
+        const { error: mediaError } = await supabase
+          .from('word_media')
+          .delete()
+          .eq('study_record_id', recordId)
+          .eq('user_id', user.id);
+        
+        if (mediaError) {
+          console.error('[删除学习记录] 删除word_media失败:', mediaError);
+        } else {
+          console.log('[删除学习记录] 已删除相关word_media记录');
+        }
+        
+        // 6. 删除 study_records 表中的记录
         const { error: recordError } = await supabase
           .from('study_records')
           .delete()
@@ -282,6 +283,7 @@ export function AppProvider({ children }) {
           .eq('user_id', user.id);
         
         if (recordError) throw recordError;
+        console.log('[删除学习记录] 已删除study_records记录:', recordId);
       }
       
       setStudyRecords(studyRecords.filter(r => r.id !== recordId));
