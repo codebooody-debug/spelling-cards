@@ -26,8 +26,11 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
     const loadImage = async () => {
       const word = item.target_word;
       
+      console.log(`[FlipCard] loadImage开始: word=${word}, studyRecordId=${studyRecordId}`);
+      
       // 步骤1: 优先从 Supabase 云端加载
       if (studyRecordId) {
+        console.log(`[FlipCard] 尝试从云端加载: ${word}`);
         try {
           const cloudUrl = await getWordImageUrl(word, studyRecordId);
           if (cloudUrl) {
@@ -36,23 +39,33 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
             await saveImageToCache(word, cloudUrl);
             console.log(`☁️ 从云端加载图片: ${word}`);
             return;
+          } else {
+            console.log(`[FlipCard] 云端无图片: ${word}`);
           }
         } catch (error) {
           console.log(`云端加载失败 (${word}), 尝试本地缓存:`, error);
         }
+      } else {
+        console.warn(`[FlipCard] studyRecordId为空，跳过云端加载: ${word}`);
       }
       
       // 步骤2: 从本地 IndexedDB 加载
+      console.log(`[FlipCard] 尝试从本地缓存加载: ${word}`);
       const cachedImage = await getCachedImage(word);
       if (cachedImage) {
+        console.log(`[FlipCard] 从本地缓存加载成功: ${word}`);
         setWordImage(cachedImage);
         hasGeneratedRef.current = true;
         return;
       }
       
       // 步骤3: 如果没有缓存，生成新图片
-      if (hasGeneratedRef.current || isGeneratingImage) return;
+      if (hasGeneratedRef.current || isGeneratingImage) {
+        console.log(`[FlipCard] 跳过生成: hasGenerated=${hasGeneratedRef.current}, isGenerating=${isGeneratingImage}`);
+        return;
+      }
       
+      console.log(`[FlipCard] 开始生成新图片: ${word}`);
       hasGeneratedRef.current = true;
       setIsGeneratingImage(true);
       setImageError(null);
