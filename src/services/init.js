@@ -25,8 +25,8 @@ const BUCKETS = [
 ];
 
 /**
- * 初始化 Storage - 仅检查状态，不自动创建 buckets
- * Buckets 应该由管理员在 Supabase Dashboard 中手动创建
+ * 初始化 Storage - 检查 buckets 是否可访问
+ * 由于权限限制，不依赖 listBuckets，而是直接尝试访问
  */
 export async function initializeStorage() {
   if (!isSupabaseConfigured()) {
@@ -48,32 +48,49 @@ export async function initializeStorage() {
       return;
     }
 
-    // 获取现有 buckets
-    const { data: existingBuckets, error: listError } = await supabase.storage.listBuckets();
-    
-    if (listError) {
-      console.error('获取 Storage buckets 失败:', listError);
-      console.log('请确保在 Supabase Dashboard 中已创建以下 buckets:', BUCKETS.map(b => b.name).join(', '));
-      return;
+    // 由于权限限制，不调用 listBuckets
+    // 而是直接尝试访问每个 bucket
+    const requiredBuckets = ['spelling-images', 'word-images', 'word-audios'];
+    const accessibleBuckets = [];
+    const inaccessibleBuckets = [];
+
+    for (const bucketName of requiredBuckets) {
+      try {
+        // 尝试列出 bucket 内容来验证可访问性
+        const { data, error } = await supabase.storage
+          .from(bucketName)
+          .list('', { limit: 1 });
+        
+        if (error) {
+          if (error.message.includes('not found') || error.message.includes('does not exist')) {
+            inaccessibleBuckets.push(bucketName);
+            console.warn(`Bucket '${bucketName}' 不存在`);
+          } else {
+            // 其他错误（如权限不足），但 bucket 可能存在
+            console.log(`Bucket '${bucketName}' 可能已存在（权限限制无法确认）`);
+            accessibleBuckets.push(bucketName);
+          }
+        } else {
+          accessibleBuckets.push(bucketName);
+          console.log(`✅ Bucket '${bucketName}' 可访问`);
+        }
+      } catch (err) {
+        console.warn(`检查 bucket '${bucketName}' 时出错:`, err.message);
+        inaccessibleBuckets.push(bucketName);
+      }
     }
 
-    const existingNames = existingBuckets?.map(b => b.name) || [];
-    console.log('已存在的 Storage buckets:', existingNames);
+    console.log('可访问的 Storage buckets:', accessibleBuckets);
 
-    // 检查必需的 buckets 是否存在
-    const missingBuckets = BUCKETS.filter(bucket => !existingNames.includes(bucket.name));
-    
-    if (missingBuckets.length > 0) {
-      console.warn('缺少必需的 Storage buckets:', missingBuckets.map(b => b.name));
-      console.warn('请在 Supabase Dashboard 中手动创建这些 buckets');
-      console.warn('详见 docs/CLOUD_SYNC_SETUP.md');
+    if (inaccessibleBuckets.length > 0) {
+      console.warn('无法访问的 Storage buckets:', inaccessibleBuckets);
+      console.warn('请在 Supabase Dashboard 中检查这些 buckets 是否存在并配置正确的访问权限');
     } else {
-      console.log('✅ 所有必需的 Storage buckets 已存在');
+      console.log('✅ 所有必需的 Storage buckets 可访问');
     }
 
   } catch (error) {
     console.error('初始化 Storage 失败:', error);
-    console.log('提示: 请确保在 Supabase Dashboard 中已创建 buckets 并配置了访问策略');
   }
 }
 
