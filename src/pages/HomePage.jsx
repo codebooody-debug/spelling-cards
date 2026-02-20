@@ -316,7 +316,7 @@ export default function HomePage() {
 
                           {/* Spelling 列表 - 分割线样式 */}
                           {isExpanded && (
-                            <div className="divide-y divide-gray-100">
+                            <div className="bg-white divide-y divide-gray-100">
                               {termGroup.records
                                 .sort((a, b) => {
                                   const numA = parseInt(a.spellingNumber?.replace(/[^\d]/g, '') || '0');
