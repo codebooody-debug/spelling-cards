@@ -298,9 +298,9 @@ export default function HomePage() {
                       const isTerm1 = termGroup.term === 'Term 1';
 
                       return (
-                        <div 
+                        <div
                           key={termKey}
-                          className={`rounded-xl overflow-hidden ${isTerm1 ? 'bg-white border border-blue-100 shadow-sm' : ''}`}
+                          className={`rounded-2xl overflow-hidden ${isTerm1 ? 'bg-white border border-blue-200 shadow' : ''}`}
                         >
                           {/* Term 标题 */}
                           <button
