@@ -300,7 +300,7 @@ export default function HomePage() {
                       return (
                         <div 
                           key={termKey}
-                          className={`rounded-xl overflow-hidden ${isTerm1 ? 'bg-blue-50/50 border border-blue-100' : ''}`}
+                          className={`rounded-xl overflow-hidden ${isTerm1 ? 'bg-white border border-blue-100 shadow-sm' : ''}`}
                         >
                           {/* Term 标题 */}
                           <button
@@ -324,11 +324,11 @@ export default function HomePage() {
                                   const numA = parseInt(a.spellingNumber?.replace(/[^\d]/g, '') || '0');
                                   const numB = parseInt(b.spellingNumber?.replace(/[^\d]/g, '') || '0');
                                   if (isNaN(numA) && isNaN(numB)) {
-                                    return (a.spellingNumber || '').localeCompare(b.spellingNumber || '');
+                                    return (b.spellingNumber || '').localeCompare(a.spellingNumber || '');
                                   }
                                   if (isNaN(numA)) return 1;
                                   if (isNaN(numB)) return -1;
-                                  return numA - numB;
+                                  return numB - numA;
                                 })
                                 .map((record) => (
                                   <div
@@ -339,7 +339,7 @@ export default function HomePage() {
                                     <div className="p-3">
                                       <div className="flex items-start justify-between">
                                         <div className="flex-1 text-left">
-                                          <h4 className="text-sm font-bold text-gray-800">{record.spellingNumber || '未命名'}</h4>
+                                          <h4 className="text-sm font-bold text-gray-800">{record.spellingNumber || record.content?.spellingNumber || 'Spelling'}</h4>
                                           {record.content?.subtitle && record.content.subtitle !== 'Untitled' && (
                                             <p className="text-xs text-gray-600 mt-1">{record.content.subtitle}</p>
                                           )}
