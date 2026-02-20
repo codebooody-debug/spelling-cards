@@ -33,3 +33,4 @@ dist-ssr
 *.secret
 *.pem
 secrets/
+*.sh
