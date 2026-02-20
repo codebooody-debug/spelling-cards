@@ -305,9 +305,7 @@ export default function HomePage() {
                           {/* Term 标题 */}
                           <button
                             onClick={() => toggleTerm(termKey)}
-                            className={`w-full flex items-center justify-between text-left p-3 hover:bg-opacity-80 transition-colors ${
-                              isTerm1 ? 'bg-blue-100/50 hover:bg-blue-100' : 'hover:bg-gray-50'
-                            }`}
+                            className="w-full flex items-center justify-between text-left p-3 hover:bg-gray-50 transition-colors"
                           >
                             <h3 className="text-base font-semibold text-gray-700">{termGroup.term}</h3>
                             <div className="flex items-center gap-2">
@@ -316,9 +314,9 @@ export default function HomePage() {
                             </div>
                           </button>
 
-                          {/* Spelling 卡片 */}
+                          {/* Spelling 列表 - 分割线样式 */}
                           {isExpanded && (
-                            <div className="space-y-2 p-3">
+                            <div className="divide-y divide-gray-100">
                               {termGroup.records
                                 .sort((a, b) => {
                                   const numA = parseInt(a.spellingNumber?.replace(/[^\d]/g, '') || '0');
@@ -330,29 +328,21 @@ export default function HomePage() {
                                   if (isNaN(numB)) return -1;
                                   return numB - numA;
                                 })
-                                .map((record) => (
+                                .map((record, index, array) => (
                                   <div
                                     key={record.id}
                                     onClick={() => handleStudy(record)}
-                                    className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all cursor-pointer"
+                                    className="flex items-center justify-between py-3 px-3 hover:bg-gray-50 cursor-pointer transition-colors"
                                   >
-                                    <div className="p-3">
-                                      <div className="flex items-start justify-between">
-                                        <div className="flex-1 text-left">
-                                          <h4 className="text-sm font-bold text-gray-800">{record.spellingNumber || record.content?.spellingNumber || 'Spelling'}</h4>
-                                          {record.content?.subtitle && record.content.subtitle !== 'Untitled' && (
-                                            <p className="text-xs text-gray-600 mt-1">{record.content.subtitle}</p>
-                                          )}
-                                          <p className="text-xs text-gray-400 mt-1">更新于: {new Date(record.createdAt).toLocaleDateString()}</p>
-                                        </div>
-                                        <button
-                                          onClick={(e) => handleDelete(e, record.id)}
-                                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                        >
-                                          <Trash2 size={14} />
-                                        </button>
-                                      </div>
+                                    <div className="flex-1">
+                                      <h4 className="text-sm font-medium text-gray-800">{record.spellingNumber || record.content?.spellingNumber || 'Spelling'}</h4>
                                     </div>
+                                    <button
+                                      onClick={(e) => handleDelete(e, record.id)}
+                                      className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
                                   </div>
                                 ))}
                             </div>
