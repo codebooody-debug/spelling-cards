@@ -3,7 +3,7 @@
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 
 // TTS引擎类型
-const TTS_ENGINES = {
+export const TTS_ENGINES = {
   BROWSER: 'browser',  // 浏览器原生
   ELEVENLABS: 'elevenlabs',  // ElevenLabs API
   MINIMAX: 'minimax',  // MiniMax API
