@@ -165,7 +165,7 @@ export default function HomePage() {
               {sortedGrades.map((gradeGroup) => (
                 <div key={gradeGroup.grade}>
                   <div className="sticky top-0 z-10 bg-gray-100 py-2 mb-4">
-                    <h2 className="text-xl font-bold text-gray-800 border-l-4 border-blue-500 pl-3">{gradeGroup.grade}</h2>
+                    <h2 className="text-xl font-bold text-gray-800">{gradeGroup.grade}</h2>
                   </div>
                   <div className="space-y-4">
                     {gradeGroup.terms.map((termGroup) => {
