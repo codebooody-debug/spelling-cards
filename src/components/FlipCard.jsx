@@ -236,7 +236,7 @@ Generate a consistent, professional educational illustration.`;
         {/* 正面 */}
         <div className="card-front absolute w-full h-full bg-white rounded-2xl shadow border border-gray-200 p-4 flex flex-col overflow-hidden">
 
-          {/* 顶部：单词信息 + TTS选择器 */}
+          {/* 顶部：单词信息 + 播放按钮 */}
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
               <div className="flex items-center gap-2">
