@@ -318,7 +318,7 @@ export default function HomePage() {
 
                           {/* Spelling 卡片 */}
                           {isExpanded && (
-                            <div className={`space-y-2 p-3 ${isTerm1 ? 'bg-blue-50/30' : ''}`}>
+                            <div className="space-y-2 p-3">
                               {termGroup.records
                                 .sort((a, b) => {
                                   const numA = parseInt(a.spellingNumber?.replace(/[^\d]/g, '') || '0');
