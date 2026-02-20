@@ -32,9 +32,9 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
       hasGeneratedRef.current = true;
       setIsGeneratingImage(true);
       try {
-        const prompt = \`Create a clean, minimalist illustration of "\${word}" for educational flashcards.\`;
+        const prompt = `Create a clean, minimalist illustration of "${word}" for educational flashcards.`;
         const data = await generateImage(prompt, 1024, 1024);
-        const imageBase64 = \`data:\${data.mimeType};base64,\${data.imageBase64}\`;
+        const imageBase64 = `data:${data.mimeType};base64,${data.imageBase64}`;
         setWordImage(imageBase64);
         await saveImageToCache(word, imageBase64);
         if (studyRecordId) {
@@ -71,7 +71,7 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
   };
 
   return (
-    <div className={\`card-container min-h-[550px] h-auto max-h-[800px] cursor-pointer \${isFlipped ? 'flipped' : ''}\`} onClick={handleFlip}>
+    <div className={`card-container min-h-[550px] h-auto max-h-[800px] cursor-pointer \${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
       <div className="card-inner relative w-full h-full">
         <div className="card-front absolute w-full h-full bg-white rounded-2xl shadow border border-gray-200 p-4 flex flex-col overflow-hidden">
           <div className="flex items-start justify-between mb-2">
@@ -83,10 +83,10 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
               {item.meaning && <div className="mt-0.5"><span className="text-sm text-gray-600">{item.meaning}</span><span className="text-xs text-gray-400 ml-1">· {item.word_type}</span></div>}
             </div>
             <div className="flex items-center gap-1.5">
-              <button onClick={(e) => playAudio(e, item.target_word)} disabled={isLoading} className={\`w-8 h-8 rounded-full flex items-center justify-center transition-all \${getButtonClass(true)}\`} title="播放单词">
+              <button onClick={(e) => playAudio(e, item.target_word)} disabled={isLoading} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all \${getButtonClass(true)}`} title="播放单词">
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <span className="text-xs font-bold">Aa</span>}
               </button>
-              <button onClick={(e) => playAudio(e, item.sentence)} disabled={isLoading} className={\`w-8 h-8 rounded-full flex items-center justify-center transition-all \${getButtonClass(false)}\`} title="播放例句">
+              <button onClick={(e) => playAudio(e, item.sentence)} disabled={isLoading} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all \${getButtonClass(false)}`} title="播放例句">
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} className={isPlaying ? 'animate-pulse' : ''} />}
               </button>
             </div>
