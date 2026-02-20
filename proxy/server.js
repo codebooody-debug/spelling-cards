@@ -2,7 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
 const path = require('path');
-require('dotenv').config();
+// 从根目录加载 .env 文件
+require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 app.use(cors());
