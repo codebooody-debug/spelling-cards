@@ -2,7 +2,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import FlipCard from '../components/FlipCard';
 import { ArrowLeft, BookOpen, RotateCcw } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { setTTSEngine, getTTSEngine } from '../services/tts';
+
+const TTS_OPTIONS = [
+  { key: 'google', label: 'Google' },
+  { key: 'minimax', label: 'MiniMax' },
+  { key: 'browser', label: 'Web Voice' }
+];
 
 function StudyPage() {
   const { contentId } = useParams();
@@ -10,6 +17,22 @@ function StudyPage() {
   const { studyRecords } = useApp();
   
   const [flippedAll, setFlippedAll] = useState(false);
+  const [currentEngine, setCurrentEngine] = useState(getTTSEngine());
+
+  // 从 localStorage 恢复 TTS 设置
+  useEffect(() => {
+    const saved = localStorage.getItem('tts-engine');
+    if (saved) {
+      setTTSEngine(saved);
+      setCurrentEngine(saved);
+    }
+  }, []);
+
+  const handleEngineChange = (engine) => {
+    setTTSEngine(engine);
+    setCurrentEngine(engine);
+    localStorage.setItem('tts-engine', engine);
+  };
 
   console.log('[StudyPage] contentId:', contentId);
   console.log('[StudyPage] studyRecords count:', studyRecords.length);
@@ -77,6 +100,31 @@ function StudyPage() {
                 studyRecordId={contentId}
               />
             ))}
+          </div>
+
+          {/* TTS 音频来源切换栏 */}
+          <div className="mt-8 py-4 bg-white rounded-xl shadow border border-gray-200">
+            <div className="flex items-center justify-center gap-6">
+              <span className="text-sm text-gray-500">音频来源:</span>
+              <div className="flex items-center gap-4">
+                {TTS_OPTIONS.map((option) => (
+                  <button
+                    key={option.key}
+                    onClick={() => handleEngineChange(option.key)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all ${
+                      currentEngine === option.key
+                        ? 'bg-blue-100 text-blue-700 font-medium'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full ${
+                      currentEngine === option.key ? 'bg-blue-500' : 'bg-gray-300'
+                    }`}></span>
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* 底部 */}
