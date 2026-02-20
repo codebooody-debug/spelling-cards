@@ -1,9 +1,9 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { Volume2, HelpCircle, Loader2, ImageIcon } from 'lucide-react';
+import { Volume2, HelpCircle, Loader2, ImageIcon, Settings } from 'lucide-react';
 import { getCachedImage, saveImageToCache } from '../services/imageCache';
 import { generateImage } from '../services/api';
 import { getWordImageUrl, uploadWordImage, saveWordMedia } from '../services/storage';
-import { playTTS } from '../services/tts';
+import { playTTS, setTTSEngine, getTTSEngine, TTS_ENGINES } from '../services/tts';
 
 function FlipCard({ item, flippedAll, studyRecordId }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -12,6 +12,8 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
   const [wordImage, setWordImage] = useState(null);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [imageError, setImageError] = useState(null);
+  const [currentTTSEngine, setCurrentTTSEngine] = useState(getTTSEngine());
+  const [showTTSSelector, setShowTTSSelector] = useState(false);
 
   const hasGeneratedRef = useRef(false);
 
@@ -185,6 +187,13 @@ Generate a consistent, professional educational illustration.`;
     loadImage();
   }, [item.target_word, studyRecordId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // 切换TTS引擎
+  const handleTTSEngineChange = (engine) => {
+    setTTSEngine(engine);
+    setCurrentTTSEngine(engine);
+    setShowTTSSelector(false);
+  };
+
   // 播放语音
   const playAudio = useCallback(async (e, text) => {
     e.stopPropagation();
@@ -312,6 +321,44 @@ Generate a consistent, professional educational illustration.`;
                 <span className="text-sm text-gray-700 font-medium">{item.antonyms.join(' · ')}</span>
               </div>
             )}
+          </div>
+
+          {/* TTS 引擎选择器 */}
+          <div className="pt-2 border-t border-gray-100 mt-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">语音引擎</span>
+              <div className="relative">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowTTSSelector(!showTTSSelector); }}
+                  className="flex items-center gap-1 text-xs text-gray-600 hover:text-blue-600 bg-gray-50 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                >
+                  <Settings size={12} />
+                  {currentTTSEngine === 'browser' ? '浏览器' : currentTTSEngine === 'google' ? 'Google' : 'MiniMax'}
+                </button>
+                {showTTSSelector && (
+                  <div className="absolute bottom-full right-0 mb-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[100px] z-20">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleTTSEngineChange('browser'); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 ${currentTTSEngine === 'browser' ? 'text-blue-600 bg-blue-50' : 'text-gray-700'}`}
+                    >
+                      浏览器原生
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleTTSEngineChange('google'); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 ${currentTTSEngine === 'google' ? 'text-blue-600 bg-blue-50' : 'text-gray-700'}`}
+                    >
+                      Google Cloud
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleTTSEngineChange('minimax'); }}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 ${currentTTSEngine === 'minimax' ? 'text-blue-600 bg-blue-50' : 'text-gray-700'}`}
+                    >
+                      MiniMax
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
