@@ -300,7 +300,7 @@ export default function HomePage() {
                       return (
                         <div
                           key={termKey}
-                          className={`rounded-2xl overflow-hidden ${isTerm1 ? 'bg-white border border-blue-200 shadow' : ''}`}
+                          className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden"
                         >
                           {/* Term 标题 */}
                           <button
