@@ -167,13 +167,13 @@ export default function HomePage() {
                   <div className="sticky top-0 z-10 bg-gray-100 py-2 mb-4">
                     <h2 className="text-xl font-bold text-gray-800">{gradeGroup.grade}</h2>
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-4 px-4">
                     {gradeGroup.terms.map((termGroup) => {
                       const termKey = `${termGroup.grade}-${termGroup.term}`;
                       const isExpanded = expandedTerms[termKey] !== false;
                       return (
-                        <div key={termKey} className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
-                          <button onClick={() => toggleTerm(termKey)} className="w-full flex items-center justify-between text-left p-3 bg-white hover:bg-gray-50 transition-colors">
+                        <div key={termKey} className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden py-2">
+                          <button onClick={() => toggleTerm(termKey)} className="w-full flex items-center justify-between text-left px-5 py-4 bg-white hover:bg-gray-50 transition-colors">
                             <h3 className="text-base font-semibold text-gray-700">{termGroup.term}</h3>
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-400">{termGroup.records.length} 个</span>
@@ -181,7 +181,7 @@ export default function HomePage() {
                             </div>
                           </button>
                           {isExpanded && (
-                            <div className="bg-white divide-y divide-gray-100">
+                            <div className="bg-white divide-y divide-gray-100 px-2">
                               {termGroup.records.sort((a, b) => {
                                 const numA = parseInt(a.spellingNumber?.replace(/[^\d]/g, '') || '0');
                                 const numB = parseInt(b.spellingNumber?.replace(/[^\d]/g, '') || '0');
@@ -189,7 +189,7 @@ export default function HomePage() {
                                 if (isNaN(numA)) return 1; if (isNaN(numB)) return -1;
                                 return numB - numA;
                               }).map((record) => (
-                                <div key={record.id} onClick={() => handleStudy(record)} className="flex items-center justify-between py-3 px-3 hover:bg-gray-50 cursor-pointer transition-colors">
+                                <div key={record.id} onClick={() => handleStudy(record)} className="flex items-center justify-between py-4 px-4 hover:bg-gray-50 cursor-pointer transition-colors">
                                   <div className="flex-1">
                                     <h4 className="text-sm font-medium text-gray-800">{record.spelling_number || record.spellingNumber || record.content?.title || record.content?.spellingNumber || 'Spelling'}</h4>
                                   </div>
