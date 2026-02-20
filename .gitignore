@@ -24,3 +24,12 @@ dist-ssr
 *.sw?
 .vercel
 .env
+
+# Environment variables - 不要提交密钥到 Git
+.env
+.env.local
+.env.production
+*.key
+*.secret
+*.pem
+secrets/
