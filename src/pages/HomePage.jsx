@@ -37,32 +37,37 @@ export default function HomePage() {
     }
   };
 
-  // 按 Term 分组 - 使用 useMemo 优化性能
-  const groupedByTerm = useMemo(() => {
-    return studyRecords.reduce((groups, record) => {
-      const termKey = `${record.grade}-${record.term}`;
-      if (!groups[termKey]) {
-        groups[termKey] = {
+  // 按年级和 Term 分组 - 使用 useMemo 优化性能
+  const groupedByGrade = useMemo(() => {
+    return studyRecords.reduce((grades, record) => {
+      if (!grades[record.grade]) {
+        grades[record.grade] = {};
+      }
+      if (!grades[record.grade][record.term]) {
+        grades[record.grade][record.term] = {
           grade: record.grade,
           term: record.term,
           records: []
         };
       }
-      groups[termKey].records.push(record);
-      return groups;
+      grades[record.grade][record.term].records.push(record);
+      return grades;
     }, {});
   }, [studyRecords]);
 
-  // 排序 - 使用 useMemo 优化性能
-  const sortedTermGroups = useMemo(() => {
-    return Object.values(groupedByTerm).sort((a, b) => {
-      const gradeOrder = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
-      const gradeDiff = gradeOrder.indexOf(a.grade) - gradeOrder.indexOf(b.grade);
-      if (gradeDiff !== 0) return gradeDiff;
-      const termOrder = ['Term 1', 'Term 2', 'Term 3', 'Term 4'];
-      return termOrder.indexOf(a.term) - termOrder.indexOf(b.term);
-    });
-  }, [groupedByTerm]);
+  // 排序年级和 Term
+  const sortedGrades = useMemo(() => {
+    const gradeOrder = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
+    const termOrder = ['Term 1', 'Term 2', 'Term 3', 'Term 4'];
+    
+    return Object.keys(groupedByGrade)
+      .sort((a, b) => gradeOrder.indexOf(a) - gradeOrder.indexOf(b))
+      .map(grade => ({
+        grade,
+        terms: Object.values(groupedByGrade[grade])
+          .sort((a, b) => termOrder.indexOf(a.term) - termOrder.indexOf(b.term))
+      }));
+  }, [groupedByGrade]);
 
   const hasRecords = studyRecords.length > 0;
 
@@ -70,10 +75,12 @@ export default function HomePage() {
   const [expandedTerms, setExpandedTerms] = useState({});
 
   useEffect(() => {
-    if (sortedTermGroups.length > 0) {
+    if (sortedGrades.length > 0) {
       const initialExpanded = {};
-      sortedTermGroups.forEach(group => {
-        initialExpanded[`${group.grade}-${group.term}`] = true;
+      sortedGrades.forEach(gradeGroup => {
+        gradeGroup.terms.forEach(termGroup => {
+          initialExpanded[`${gradeGroup.grade}-${termGroup.term}`] = true;
+        });
       });
       setExpandedTerms(initialExpanded);
     }
@@ -273,73 +280,89 @@ export default function HomePage() {
         <div className="max-w-[800px] mx-auto px-4">
           {/* 已有的听写记录 */}
           {hasRecords && (
-            <div className="mb-8 space-y-6">
-              {sortedTermGroups.map((termGroup) => {
-                const termKey = `${termGroup.grade}-${termGroup.term}`;
-                const isExpanded = expandedTerms[termKey] !== false;
-
-                return (
-                  <div key={termKey}>
-                    {/* Term 标题 */}
-                    <button
-                      onClick={() => toggleTerm(termKey)}
-                      className="w-full flex items-center justify-between text-left mb-4 hover:bg-gray-50 p-2 rounded-lg transition-colors"
-                    >
-                      <h2 className="text-lg font-semibold text-gray-800">{termGroup.term}</h2>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-400">{termGroup.records.length} 个</span>
-                        {isExpanded ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
-                      </div>
-                    </button>
-
-                    {/* Spelling 卡片 */}
-                    {isExpanded && (
-                      <div className="space-y-3">
-                        {termGroup.records
-                          .sort((a, b) => {
-                            // 提取Spelling编号中的数字部分进行排序
-                            const numA = parseInt(a.spellingNumber?.replace(/[^\d]/g, '') || '0');
-                            const numB = parseInt(b.spellingNumber?.replace(/[^\d]/g, '') || '0');
-                            
-                            // 如果无法解析数字，按字母顺序排序
-                            if (isNaN(numA) && isNaN(numB)) {
-                              return (a.spellingNumber || '').localeCompare(b.spellingNumber || '');
-                            }
-                            if (isNaN(numA)) return 1;
-                            if (isNaN(numB)) return -1;
-                            
-                            return numA - numB;
-                          })
-                          .map((record) => (
-                            <div
-                              key={record.id}
-                              onClick={() => handleStudy(record)}
-                              className="bg-white rounded-xl shadow border border-gray-100 overflow-hidden hover:shadow-md transition-all cursor-pointer"
-                            >
-                              <div className="p-4">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1 text-left">
-                                    <h3 className="text-base font-bold text-gray-800">{record.spellingNumber || '未命名'}</h3>
-                                    {record.content?.subtitle && record.content.subtitle !== 'Untitled' && (
-                                      <p className="text-sm text-gray-600 mt-1">{record.content.subtitle}</p>
-                                    )}
-                                    <p className="text-xs text-gray-400 mt-2">更新于: {new Date(record.createdAt).toLocaleDateString()}</p>
-                                  </div>
-                                  <button
-                                    onClick={(e) => handleDelete(e, record.id)}
-                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                  >
-                                    <Trash2 size={16} />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                      </div>
-                    )}
+            <div className="mb-8 space-y-8">
+              {sortedGrades.map((gradeGroup) => (
+                <div key={gradeGroup.grade}>
+                  {/* 年级标题 - 固定分割 */}
+                  <div className="sticky top-0 z-10 bg-gray-100 py-2 mb-4">
+                    <h2 className="text-xl font-bold text-gray-800 border-l-4 border-blue-500 pl-3">
+                      {gradeGroup.grade}
+                    </h2>
                   </div>
-                );
-              })}
+
+                  {/* Term 分组 */}
+                  <div className="space-y-4">
+                    {gradeGroup.terms.map((termGroup) => {
+                      const termKey = `${termGroup.grade}-${termGroup.term}`;
+                      const isExpanded = expandedTerms[termKey] !== false;
+                      const isTerm1 = termGroup.term === 'Term 1';
+
+                      return (
+                        <div 
+                          key={termKey}
+                          className={`rounded-xl overflow-hidden ${isTerm1 ? 'bg-blue-50/50 border border-blue-100' : ''}`}
+                        >
+                          {/* Term 标题 */}
+                          <button
+                            onClick={() => toggleTerm(termKey)}
+                            className={`w-full flex items-center justify-between text-left p-3 hover:bg-opacity-80 transition-colors ${
+                              isTerm1 ? 'bg-blue-100/50 hover:bg-blue-100' : 'hover:bg-gray-50'
+                            }`}
+                          >
+                            <h3 className="text-base font-semibold text-gray-700">{termGroup.term}</h3>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-gray-400">{termGroup.records.length} 个</span>
+                              {isExpanded ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+                            </div>
+                          </button>
+
+                          {/* Spelling 卡片 */}
+                          {isExpanded && (
+                            <div className={`space-y-2 p-3 ${isTerm1 ? 'bg-blue-50/30' : ''}`}>
+                              {termGroup.records
+                                .sort((a, b) => {
+                                  const numA = parseInt(a.spellingNumber?.replace(/[^\d]/g, '') || '0');
+                                  const numB = parseInt(b.spellingNumber?.replace(/[^\d]/g, '') || '0');
+                                  if (isNaN(numA) && isNaN(numB)) {
+                                    return (a.spellingNumber || '').localeCompare(b.spellingNumber || '');
+                                  }
+                                  if (isNaN(numA)) return 1;
+                                  if (isNaN(numB)) return -1;
+                                  return numA - numB;
+                                })
+                                .map((record) => (
+                                  <div
+                                    key={record.id}
+                                    onClick={() => handleStudy(record)}
+                                    className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-all cursor-pointer"
+                                  >
+                                    <div className="p-3">
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex-1 text-left">
+                                          <h4 className="text-sm font-bold text-gray-800">{record.spellingNumber || '未命名'}</h4>
+                                          {record.content?.subtitle && record.content.subtitle !== 'Untitled' && (
+                                            <p className="text-xs text-gray-600 mt-1">{record.content.subtitle}</p>
+                                          )}
+                                          <p className="text-xs text-gray-400 mt-1">更新于: {new Date(record.createdAt).toLocaleDateString()}</p>
+                                        </div>
+                                        <button
+                                          onClick={(e) => handleDelete(e, record.id)}
+                                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                        >
+                                          <Trash2 size={14} />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
