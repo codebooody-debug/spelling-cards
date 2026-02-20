@@ -305,7 +305,7 @@ export default function HomePage() {
                           {/* Term 标题 */}
                           <button
                             onClick={() => toggleTerm(termKey)}
-                            className="w-full flex items-center justify-between text-left p-3 hover:bg-gray-50 transition-colors"
+                            className="w-full flex items-center justify-between text-left p-3 bg-white hover:bg-gray-50 transition-colors"
                           >
                             <h3 className="text-base font-semibold text-gray-700">{termGroup.term}</h3>
                             <div className="flex items-center gap-2">
@@ -335,7 +335,7 @@ export default function HomePage() {
                                     className="flex items-center justify-between py-3 px-3 hover:bg-gray-50 cursor-pointer transition-colors"
                                   >
                                     <div className="flex-1">
-                                      <h4 className="text-sm font-medium text-gray-800">{record.spellingNumber || record.content?.spellingNumber || 'Spelling'}</h4>
+                                      <h4 className="text-sm font-medium text-gray-800">{record.spelling_number || record.spellingNumber || record.content?.title || record.content?.spellingNumber || 'Spelling'}</h4>
                                     </div>
                                     <button
                                       onClick={(e) => handleDelete(e, record.id)}
