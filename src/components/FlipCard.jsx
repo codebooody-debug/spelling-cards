@@ -3,7 +3,7 @@ import { Volume2, HelpCircle, Loader2, ImageIcon } from 'lucide-react';
 import { getCachedImage, saveImageToCache } from '../services/imageCache';
 import { generateImage } from '../services/api';
 import { getWordImageUrl, uploadWordImage, saveWordMedia } from '../services/storage';
-import { playTTS } from '../services/tts';
+import { playTTS, getTTSEngine } from '../services/tts';
 
 function FlipCard({ item, flippedAll, studyRecordId }) {
   const [isFlipped, setIsFlipped] = useState(false);
@@ -32,7 +32,26 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
       hasGeneratedRef.current = true;
       setIsGeneratingImage(true);
       try {
-        const prompt = `Create a clean, minimalist illustration of "${word}" for educational flashcards.`;
+        // 构建详细的图片生成 prompt
+        const sentence = item.sentence || '';
+        const meaning = item.meaning || '';
+        const wordType = item.word_type || 'word';
+        
+        const prompt = `Create a flat illustration, vector art style image that visually represents the word "${word}" in the context of: "${sentence}". 
+
+Key elements to include:
+- Visual concept: Show the meaning of "${word}" (${meaning}) through a clear, easy-to-understand scene
+- Style: Modern flat illustration, vector art, clean lines, minimal shading
+- Color palette: Soft, harmonious colors with 3-4 main colors maximum
+- Composition: Centered main subject with simple background elements
+- Details: Include subtle visual cues that reference the sentence context
+- Mood: Educational, friendly, and engaging for children
+- NO frames, NO borders, NO decorative outlines around the image
+- NO text or words in the image
+- Clean edges, no gray borders or frames
+
+The illustration should directly show what "${word}" means in the sentence "${sentence}", making it intuitive for language learners to understand the word's meaning.`;
+        
         const data = await generateImage(prompt, 1024, 1024);
         const imageBase64 = `data:${data.mimeType};base64,${data.imageBase64}`;
         setWordImage(imageBase64);
@@ -50,12 +69,32 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
   const playAudio = useCallback(async (e, text) => {
     e.stopPropagation();
     if (isPlaying || isLoading) return;
-    setIsLoading(true); setIsPlaying(true);
-    try { await playTTS(text, { rate: 0.9, lang: 'en-US' }); } catch (e) {}
-    finally { setIsLoading(false); setIsPlaying(false); }
+    setIsLoading(true); 
+    setIsPlaying(true);
+    try { 
+      await playTTS(text, { rate: 0.9, lang: 'en-US' }); 
+    } catch (error) {
+      console.error('[FlipCard] TTS播放失败:', error);
+      // 显示详细错误提示
+      const engine = getTTSEngine();
+      let errorMsg = error.message || '未知错误';
+      
+      // 提取详细错误信息
+      if (errorMsg.includes('non-2xx')) {
+        errorMsg = 'Edge Function 调用失败，可能是 API Key 未配置或服务异常';
+      }
+      
+      alert(`语音播放失败\n\n当前音源: ${engine}\n错误: ${errorMsg}\n\n建议:\n1. 检查网络连接\n2. 切换到 Web Voice 音源\n3. 联系管理员检查 API 配置`);
+    } finally { 
+      setIsLoading(false); 
+      setIsPlaying(false); 
+    }
   }, [isPlaying, isLoading]);
 
-  const handleFlip = () => setIsFlipped(!isFlipped);
+  const handleFlip = useCallback(() => {
+    console.log('[FlipCard] 翻转卡片, 当前状态:', isFlipped);
+    setIsFlipped(prev => !prev);
+  }, [isFlipped]);
 
   const renderHighlightedSentence = () => {
     const parts = item.sentence.split(item.target_word);
@@ -71,7 +110,7 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
   };
 
   return (
-    <div className={`card-container min-h-[550px] h-auto max-h-[800px] cursor-pointer \${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
+    <div className={`card-container min-h-[550px] h-auto max-h-[800px] cursor-pointer ${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
       <div className="card-inner relative w-full h-full">
         <div className="card-front absolute w-full h-full bg-white rounded-2xl shadow border border-gray-200 p-4 flex flex-col overflow-hidden">
           <div className="flex items-start justify-between mb-2">
@@ -83,15 +122,15 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
               {item.meaning && <div className="mt-0.5"><span className="text-sm text-gray-600">{item.meaning}</span><span className="text-xs text-gray-400 ml-1">· {item.word_type}</span></div>}
             </div>
             <div className="flex items-center gap-1.5">
-              <button onClick={(e) => playAudio(e, item.target_word)} disabled={isLoading} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all \${getButtonClass(true)}`} title="播放单词">
+              <button onClick={(e) => playAudio(e, item.target_word)} disabled={isLoading} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${getButtonClass(true)}`} title="播放单词">
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <span className="text-xs font-bold">Aa</span>}
               </button>
-              <button onClick={(e) => playAudio(e, item.sentence)} disabled={isLoading} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all \${getButtonClass(false)}`} title="播放例句">
+              <button onClick={(e) => playAudio(e, item.sentence)} disabled={isLoading} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${getButtonClass(false)}`} title="播放例句">
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} className={isPlaying ? 'animate-pulse' : ''} />}
               </button>
             </div>
           </div>
-          <div className="rounded-2xl w-[260px] h-[260px] mx-auto flex items-center justify-center mb-3 shrink-0 overflow-hidden bg-white border-2 border-gray-100">
+          <div className="rounded-2xl w-[260px] h-[260px] mx-auto flex items-center justify-center mb-3 shrink-0 overflow-hidden bg-white">
             {isGeneratingImage ? <div className="flex flex-col items-center text-gray-500"><Loader2 size={32} className="animate-spin mb-2" /><span className="text-sm">生成图片中...</span></div> :
              wordImage ? <img src={wordImage} alt={item.target_word} className="w-full h-full object-cover rounded-xl" onError={() => setImageError('图片加载失败')} /> :
              imageError ? <div className="flex flex-col items-center text-gray-400"><ImageIcon size={40} className="mb-2" /><span className="text-sm text-center px-4">{item.target_word}</span></div> :
