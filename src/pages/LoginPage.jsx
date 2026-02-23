@@ -8,7 +8,7 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 检查是否已经登录 + 处理 OAuth 回调
+  // 检查是否已经登录
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -18,47 +18,23 @@ function LoginPage() {
           return;
         }
         
-        // 首先检查 URL 中是否有 OAuth 回调参数
-        const hash = window.location.hash;
-        if (hash && hash.includes('access_token')) {
-          console.log('[LoginPage] 检测到 OAuth 回调，处理中...');
-          // Supabase 会自动处理 hash 中的 token，我们只需要等待一下
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error('[LoginPage] 获取 session 失败:', error);
-          setError('获取登录状态失败: ' + error.message);
           return;
         }
         
         if (session) {
           console.log('[LoginPage] 已有 session，跳转到首页');
           navigate('/');
-        } else {
-          console.log('[LoginPage] 未登录，显示登录界面');
         }
       } catch (err) {
         console.error('[LoginPage] 检查 session 失败:', err);
-        setError('检查登录状态失败: ' + err.message);
       }
     };
     
     checkSession();
-    
-    // 监听 auth 状态变化
-    const supabase = getSupabase();
-    if (supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-        console.log('[LoginPage] Auth 状态变化:', event, session ? '有session' : '无session');
-        if (event === 'SIGNED_IN' && session) {
-          navigate('/');
-        }
-      });
-      return () => subscription.unsubscribe();
-    }
   }, [navigate]);
 
   // Google 登录
@@ -74,36 +50,15 @@ function LoginPage() {
     try {
       const supabase = getSupabase();
       
-      // 检测是否是 Chrome 浏览器
-      const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-      console.log('[LoginPage] 浏览器检测:', isChrome ? 'Chrome' : '其他');
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin,
-          // Chrome 需要这些参数来避免被拦截
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-          // 跳过浏览器重定向，我们手动处理
-          skipBrowserRedirect: true,
         }
       });
 
       if (error) throw error;
-      
-      // signInWithOAuth 成功后返回 provider 的 URL，需要手动跳转
-      if (data?.url) {
-        console.log('[LoginPage] 跳转到 Google OAuth:', data.url);
-        // 使用 location.replace 而不是 href，避免历史记录问题
-        window.location.replace(data.url);
-      } else {
-        console.error('[LoginPage] 没有获取到 OAuth URL');
-        setError('无法获取登录链接，请重试');
-        setIsLoading(false);
-      }
+      // signInWithOAuth 会自动跳转到 Google
     } catch (err) {
       console.error('[LoginPage] Google 登录失败:', err);
       setError(err.message || '登录失败');
