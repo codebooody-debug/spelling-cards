@@ -167,7 +167,7 @@ export default function HomePage() {
                   <div className="sticky top-0 z-10 bg-gray-100 py-3 mb-6">
                     <h2 className="text-xl font-bold text-gray-800">{gradeGroup.grade}</h2>
                   </div>
-                  <div className="space-y-6 px-6">
+                  <div className="space-y-6">
                     {gradeGroup.terms.map((termGroup) => {
                       const termKey = `${termGroup.grade}-${termGroup.term}`;
                       const isExpanded = expandedTerms[termKey] !== false;
