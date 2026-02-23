@@ -74,11 +74,11 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4 safe-area-top safe-area-bottom safe-area-left safe-area-right no-horizontal-scroll">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8 sm:p-4 safe-area-top safe-area-bottom safe-area-left safe-area-right no-horizontal-scroll">
+      <div className="w-full max-w-sm sm:max-w-md">
         {/* Logo */}
-        <div className="text-center mb-8">
-          <img src="/login-banner.jpg" alt="单词听写助手" className="w-full mx-auto mb-4 rounded-2xl" />
+        <div className="text-center mb-6 sm:mb-8 px-2">
+          <img src="/login-banner.jpg" alt="单词听写助手" className="w-full max-w-[280px] sm:max-w-full mx-auto mb-4 rounded-2xl" />
           <h1 className="text-2xl font-bold text-gray-800">单词听写助手</h1>
           <p className="text-gray-500 mt-2">登录以同步你的学习记录</p>
         </div>
@@ -91,11 +91,12 @@ function LoginPage() {
         )}
 
         {/* Google 登录 */}
-        <button
-          onClick={handleGoogleLogin}
-          disabled={isLoading}
-          className="min-touch w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation touch-feedback"
-        >
+        <div className="px-1">
+          <button
+            onClick={handleGoogleLogin}
+            disabled={isLoading}
+            className="min-touch w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation touch-feedback"
+          >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -104,6 +105,7 @@ function LoginPage() {
           </svg>
           {isLoading ? '登录中...' : '使用 Google 登录'}
         </button>
+        </div>
 
         {/* 分隔线 */}
         <div className="flex items-center gap-4 my-6">
@@ -113,7 +115,7 @@ function LoginPage() {
         </div>
 
         {/* 邮箱登录 */}
-        <form onSubmit={handleEmailLogin} className="w-full">
+        <form onSubmit={handleEmailLogin} className="w-full px-1">
           <div className="flex gap-2 items-center">
             <div className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${email ? 'w-[calc(100%-84px)]' : 'w-full'}`}>
               <div className="relative">
@@ -141,7 +143,7 @@ function LoginPage() {
         </form>
 
         {/* 说明 */}
-        <div className="mt-8 p-4 bg-blue-50 rounded-xl">
+        <div className="mt-6 sm:mt-8 p-4 bg-blue-50 rounded-xl mx-1">
           <p className="text-sm text-blue-700">
             💡 登录后，你的学习记录将自动同步到云端，在任何设备上都能访问。
           </p>
