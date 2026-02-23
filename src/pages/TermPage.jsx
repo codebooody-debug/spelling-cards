@@ -25,7 +25,7 @@ export default function TermPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="bg-white shadow-sm border-b border-gray-200">
+      <header className="bg-white border-b border-gray-200">
         <div className="px-4 py-4">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
