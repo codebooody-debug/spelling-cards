@@ -1,24 +1,31 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import { BookOpen, Chrome, Mail } from 'lucide-react';
 
 function LoginPage() {
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   // 检查是否已经登录
   useEffect(() => {
     const checkSession = async () => {
-      const supabase = getSupabase();
-      if (!supabase) return;
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        window.location.href = '/';
+      try {
+        const supabase = getSupabase();
+        if (!supabase) return;
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log('[LoginPage] 已有 session，跳转到首页');
+          navigate('/');
+        }
+      } catch (err) {
+        console.error('[LoginPage] 检查 session 失败:', err);
       }
     };
     checkSession();
-  }, []);
+  }, [navigate]);
 
   // Google 登录
   const handleGoogleLogin = async () => {

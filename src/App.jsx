@@ -29,18 +29,34 @@ const PageLoader = () => (
 function ProtectedRoute({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = getSupabase();
-      if (!supabase) {
-        setIsLoading(false);
-        return;
-      }
+      try {
+        const supabase = getSupabase();
+        if (!supabase) {
+          console.log('[ProtectedRoute] Supabase 未配置');
+          setIsLoading(false);
+          return;
+        }
 
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsAuthenticated(!!session);
-      setIsLoading(false);
+        // 添加超时机制
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('检查登录状态超时')), 10000);
+        });
+
+        const sessionPromise = supabase.auth.getSession();
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]);
+        
+        console.log('[ProtectedRoute] Session:', session ? '已登录' : '未登录');
+        setIsAuthenticated(!!session);
+      } catch (err) {
+        console.error('[ProtectedRoute] 检查认证失败:', err);
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     checkAuth();
@@ -49,6 +65,7 @@ function ProtectedRoute({ children }) {
     const supabase = getSupabase();
     if (supabase) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        console.log('[ProtectedRoute] Auth 状态变化:', _event, session ? '有session' : '无session');
         setIsAuthenticated(!!session);
       });
       return () => subscription.unsubscribe();
@@ -56,6 +73,22 @@ function ProtectedRoute({ children }) {
   }, []);
 
   if (isLoading) return <PageLoader />;
+  
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8">
+          <p className="text-red-500 mb-4">加载失败: {error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg"
+          >
+            刷新页面
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
