@@ -114,8 +114,8 @@ function LoginPage() {
 
         {/* 邮箱登录 */}
         <form onSubmit={handleEmailLogin} className="w-full">
-          <div className="flex gap-2 items-center">
-            <div className={`transition-all duration-300 ease-out ${email ? 'w-[calc(100%-88px)]' : 'w-full'}`}>
+          <div className="flex gap-2 items-center w-full">
+            <div className={`transition-all duration-300 ease-out ${email ? 'flex-[calc(100%-88px)]' : 'flex-1'}`}>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
