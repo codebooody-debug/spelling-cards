@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import FlipCard from '../components/FlipCard';
-import { X, BookOpen, RotateCcw } from 'lucide-react';
+import { X, BookOpen, RotateCcw, Trash2 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { setTTSEngine, getTTSEngine } from '../services/tts';
 import { useToast } from '../components/Toast';
@@ -15,7 +15,7 @@ const TTS_OPTIONS = [
 function StudyPage() {
   const { contentId } = useParams();
   const navigate = useNavigate();
-  const { studyRecords, isLoading } = useApp();
+  const { studyRecords, isLoading, deleteStudyRecord } = useApp();
   const { success } = useToast();
   const [renderError, setRenderError] = useState(null);
   
@@ -33,6 +33,14 @@ function StudyPage() {
   useEffect(() => {
     console.log('[StudyPage] 当前 TTS 引擎:', currentEngine);
   }, []);
+
+  const handleDelete = () => {
+    if (confirm('确定要删除这个听写记录吗？')) {
+      deleteStudyRecord(contentId);
+      success('记录已删除');
+      navigate('/');
+    }
+  };
 
   const handleEngineChange = (engine) => {
     if (engine === currentEngine) {
@@ -133,8 +141,7 @@ function StudyPage() {
               </button>
               <div className="bg-blue-500 p-2 rounded-lg"><BookOpen className="text-white" size={24} /></div>
               <div>
-                <h1 className="text-xl font-bold text-gray-800">{spellingData.title}</h1>
-                <p className="text-sm text-gray-500">{record.grade} · {record.term}</p>
+                <h1 className="text-xl font-bold text-gray-800">{record.grade} {record.term} {record.spelling_number || record.spellingNumber || 'Spelling'}</h1>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -152,6 +159,11 @@ function StudyPage() {
       {/* Main */}
       <main className="w-full py-6">
         <div className="max-w-[1400px] mx-auto px-4">
+          {/* 标题 */}
+          <div className="mb-6">
+            <h2 className="text-lg font-medium text-gray-700">{spellingData.title}</h2>
+          </div>
+
           {/* 卡片网格 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {spellingData.items?.map((item) => (
@@ -164,8 +176,19 @@ function StudyPage() {
             ))}
           </div>
 
+          {/* 删除按钮 */}
+          <div className="mt-8 flex justify-center">
+            <button 
+              onClick={handleDelete} 
+              className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <Trash2 size={18} />
+              <span>删除此记录</span>
+            </button>
+          </div>
+
           {/* TTS 音频来源切换栏 */}
-          <div className="mt-8 py-4">
+          <div className="mt-4 py-4">
             <div className="flex items-center justify-center gap-6">
               <div className="flex items-center gap-4">
                 {TTS_OPTIONS.map((option) => (
