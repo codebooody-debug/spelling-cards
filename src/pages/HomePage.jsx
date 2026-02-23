@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../components/Toast';
-import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp, LogOut, User } from 'lucide-react';
+import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp, LogOut, User, Settings } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { extractSpelling } from '../services/api';
 import { getSupabase } from '../lib/supabase';
@@ -150,7 +150,7 @@ export default function HomePage() {
             <div className="flex items-center gap-3">
               {user && <div className="flex items-center gap-2 text-sm text-gray-600"><User size={16} /><span className="hidden sm:inline">{user.email}</span></div>}
               <button onClick={() => navigate('/admin')} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="管理面板">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m11-7h-6m-6 0H1"/></svg>
+                <Settings size={20} />
               </button>
               <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="退出登录"><LogOut size={20} /></button>
             </div>
