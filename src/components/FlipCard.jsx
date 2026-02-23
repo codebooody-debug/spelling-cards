@@ -155,7 +155,7 @@ QUALITY:
         <div className="card-back absolute w-full h-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow border border-blue-200 p-5 flex flex-col">
           <div className="flex items-center justify-between mb-3"><span className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">更多例句</span></div>
           <div className="flex-1 overflow-y-auto">
-            {item.practiceSentences?.length > 0 ? <div className="space-y-3">{item.practiceSentences.slice(0, 3).map((s, i) => <div key={i} className="p-3 bg-white/70 rounded-lg"><p className="text-base text-gray-800 leading-relaxed">{s.replace(/________/g, item.target_word)}</p></div>)}</div> :
+            {item.practiceSentences?.length > 0 ? <div className="space-y-3">{item.practiceSentences.slice(0, 3).map((s, i) => <div key={i} className="p-3 bg-white/70 rounded-lg flex items-start gap-2"><p className="text-base text-gray-800 leading-relaxed flex-1">{s.replace(/________/g, item.target_word)}</p><button onClick={(e) => playAudio(e, s.replace(/________/g, item.target_word))} className="p-1.5 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors shrink-0" title="播放"><Volume2 size={16} /></button></div>)}</div> :
              <div className="p-4 bg-white/50 rounded-lg text-center"><p className="text-sm text-gray-500">暂无额外例句</p></div>}
             {item.memory_tip && <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200"><p className="text-xs text-yellow-800 flex items-start gap-1.5"><HelpCircle size={14} className="shrink-0 mt-0.5 text-yellow-600" /><span>{item.memory_tip}</span></p></div>}
           </div>
