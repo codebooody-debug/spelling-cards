@@ -78,7 +78,7 @@ function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">📚</div>
+          <img src="/login-banner.jpg" alt="单词听写助手" className="w-full max-w-[320px] mx-auto mb-4 rounded-2xl" />
           <h1 className="text-2xl font-bold text-gray-800">单词听写助手</h1>
           <p className="text-gray-500 mt-2">登录以同步你的学习记录</p>
         </div>
