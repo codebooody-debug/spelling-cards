@@ -138,16 +138,16 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100">
       <header className="bg-white border-b border-gray-200">
-        <div className="px-4 py-4">
+        <div className="px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="text-5xl">📚</div>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="text-3xl sm:text-5xl">📚</div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">单词听写助手</h1>
-                <p className="text-sm text-gray-500">{hasRecords ? `已保存 ${studyRecords.length} 个听写记录` : '拍照或上传听写照片开始学习'}</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-gray-800">单词听写助手</h1>
+                <p className="text-xs sm:text-sm text-gray-500">{hasRecords ? `已保存 ${studyRecords.length} 个听写记录` : '拍照或上传听写照片开始学习'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               {user && <div className="flex items-center gap-2 text-sm text-gray-600"><User size={16} /><span className="hidden sm:inline">{user.email}</span></div>}
               <button onClick={() => navigate('/admin')} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="管理面板">
                 <Settings size={20} />
@@ -173,9 +173,9 @@ export default function HomePage() {
                       const isExpanded = expandedTerms[termKey] !== false;
                       return (
                         <div key={termKey} className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
-                          <div className="px-8 py-6">
-                            <button onClick={() => toggleTerm(termKey)} className="w-full flex items-center justify-between text-left py-3 bg-white cursor-pointer transition-colors">
-                            <h3 className="text-lg font-semibold text-gray-700">{termGroup.term}</h3>
+                          <div className="px-4 sm:px-8 py-4 sm:py-6">
+                            <button onClick={() => toggleTerm(termKey)} className="w-full flex items-center justify-between text-left py-2 sm:py-3 bg-white cursor-pointer transition-colors">
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-700">{termGroup.term}</h3>
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-400">{termGroup.records.length} 个</span>
                               {isExpanded ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
@@ -223,19 +223,19 @@ export default function HomePage() {
           )}
 
           <div className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-            <div className="px-8 py-6">
+            <div className="px-4 sm:px-8 py-4 sm:py-6">
               <div className="flex items-center gap-2 mb-4"><Sparkles size={20} className="text-blue-500" /><h3 className="font-semibold text-gray-800">{hasRecords ? '继续添加' : '开始'}</h3></div>
               {isProcessing ? (
-                <div className="text-center py-8">
-                  <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600">正在识别图片内容...</p>
+                <div className="text-center py-6 sm:py-8">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-sm sm:text-base text-gray-600">正在识别图片内容...</p>
                 </div>
               ) : (
-                <div onClick={() => fileInputRef.current?.click()} className={`border-2 border-dashed rounded-xl p-6 text-center transition-all cursor-pointer ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}>
+                <div onClick={() => fileInputRef.current?.click()} className={`border-2 border-dashed rounded-xl p-4 sm:p-6 text-center transition-all cursor-pointer ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400'}`}>
                   <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileSelect} className="hidden" />
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3"><Upload size={24} className="text-blue-500" /></div>
-                  <p className="font-medium text-gray-800">点击上传照片</p>
-                  <p className="text-sm text-gray-400 mt-1">JPG、PNG，最大 10MB</p>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3"><Upload size={20} className="sm:hidden text-blue-500" /><Upload size={24} className="hidden sm:block text-blue-500" /></div>
+                  <p className="font-medium text-gray-800 text-sm sm:text-base">点击上传照片</p>
+                  <p className="text-xs sm:text-sm text-gray-400 mt-1">JPG、PNG，最大 10MB</p>
                 </div>
               )}
             </div>

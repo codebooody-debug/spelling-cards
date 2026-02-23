@@ -148,9 +148,9 @@ QUALITY:
   };
 
   return (
-    <div className={`card-container min-h-[550px] h-auto max-h-[800px] cursor-pointer ${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
+    <div className={`card-container min-h-[450px] sm:min-h-[550px] h-auto max-h-[700px] sm:max-h-[800px] cursor-pointer ${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
       <div className="card-inner relative w-full h-full">
-        <div className="card-front absolute w-full h-full bg-white rounded-2xl shadow border border-gray-200 p-4 flex flex-col overflow-hidden">
+        <div className="card-front absolute w-full h-full bg-white rounded-2xl shadow border border-gray-200 p-3 sm:p-4 flex flex-col overflow-hidden">
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
               <div className="flex items-center gap-2">
@@ -168,7 +168,7 @@ QUALITY:
               </button>
             </div>
           </div>
-          <div className="rounded-2xl w-[300px] h-[300px] mx-auto flex items-center justify-center mb-3 shrink-0 overflow-hidden bg-white">
+          <div className="rounded-2xl w-[200px] h-[200px] sm:w-[240px] sm:h-[240px] md:w-[300px] md:h-[300px] mx-auto flex items-center justify-center mb-2 sm:mb-3 shrink-0 overflow-hidden bg-white">
             {isGeneratingImage ? <div className="flex flex-col items-center text-gray-500"><Loader2 size={32} className="animate-spin mb-2" /><span className="text-sm">生成图片中...</span></div> :
              wordImage ? <img src={wordImage} alt={item.target_word} className="w-full h-full object-cover rounded-xl" onError={() => setImageError('图片加载失败')} /> :
              imageError ? <div className="flex flex-col items-center text-gray-400"><ImageIcon size={40} className="mb-2" /><span className="text-sm text-center px-4">{item.target_word}</span></div> :
@@ -180,7 +180,7 @@ QUALITY:
             {item.antonyms?.length > 0 && <div className="flex items-center flex-wrap gap-2"><span className="w-3 h-3 rounded-full bg-red-500/50 shrink-0" title="反义词"></span><span className="text-sm text-gray-700 font-medium">{item.antonyms.join(' · ')}</span></div>}
           </div>
         </div>
-        <div className="card-back absolute w-full h-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow border border-blue-200 p-5 flex flex-col">
+        <div className="card-back absolute w-full h-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow border border-blue-200 p-3 sm:p-5 flex flex-col">
           <div className="flex items-center justify-between mb-3"><span className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">更多例句</span></div>
           <div className="flex-1 overflow-y-auto">
             {item.practiceSentences?.length > 0 ? <div className="space-y-4">{item.practiceSentences.slice(0, 3).map((s, i) => <div key={i} className="flex flex-col gap-2">
