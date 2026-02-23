@@ -34,9 +34,9 @@ function StudyPage() {
     console.log('[StudyPage] 当前 TTS 引擎:', currentEngine);
   }, []);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (confirm('确定要删除这个听写记录吗？')) {
-      deleteStudyRecord(contentId);
+      await deleteStudyRecord(contentId);
       success('记录已删除');
       navigate('/');
     }
