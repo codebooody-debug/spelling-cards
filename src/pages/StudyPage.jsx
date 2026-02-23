@@ -136,9 +136,6 @@ function StudyPage() {
         <div className="max-w-[1400px] mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="关闭">
-                <X size={24} className="text-gray-600" />
-              </button>
               <div className="bg-blue-500 p-2 rounded-lg"><BookOpen className="text-white" size={24} /></div>
               <div>
                 <h1 className="text-xl font-bold text-gray-800">{record.grade} {record.term} {record.spelling_number || record.spellingNumber || 'Spelling'}</h1>
@@ -150,6 +147,9 @@ function StudyPage() {
               </div>
               <button onClick={resetAll} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" title="重置所有卡片">
                 <RotateCcw size={20} className="text-gray-600" />
+              </button>
+              <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="关闭">
+                <X size={24} className="text-gray-600" />
               </button>
             </div>
           </div>
