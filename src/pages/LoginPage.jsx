@@ -113,7 +113,7 @@ function LoginPage() {
         </div>
 
         {/* 邮箱登录 */}
-        <form onSubmit={handleEmailLogin}>
+        <form onSubmit={handleEmailLogin} className="w-full">
           <div className="flex gap-2 items-center">
             <div className={`transition-all duration-300 ease-out ${email ? 'w-[calc(100%-88px)]' : 'w-full'}`}>
               <div className="relative">
