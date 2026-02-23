@@ -19,14 +19,41 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
   useEffect(() => {
     const loadImage = async () => {
       const word = item.target_word;
+      
+      // 1. 先尝试从 sessionStorage 同步恢复（最快，切换页面时不闪烁）
+      try {
+        const sessionCached = sessionStorage.getItem(`img_${word}`);
+        if (sessionCached) {
+          setWordImage(sessionCached);
+          hasGeneratedRef.current = true;
+        }
+      } catch (e) {}
+      
+      // 2. 检查云端存储
       if (studyRecordId) {
         try {
           const cloudUrl = await getWordImageUrl(word, studyRecordId);
-          if (cloudUrl) { setWordImage(cloudUrl); await saveImageToCache(word, cloudUrl); return; }
+          if (cloudUrl) { 
+            setWordImage(cloudUrl); 
+            await saveImageToCache(word, cloudUrl);
+            try { sessionStorage.setItem(`img_${word}`, cloudUrl); } catch (e) {}
+            hasGeneratedRef.current = true;
+            return; 
+          }
         } catch (e) {}
       }
+      
+      // 3. 检查 IndexedDB 缓存
       const cached = await getCachedImage(word);
-      if (cached) { setWordImage(cached); hasGeneratedRef.current = true; return; }
+      if (cached) { 
+        setWordImage(cached); 
+        hasGeneratedRef.current = true;
+        // 同步到 sessionStorage 供下次快速恢复
+        try { sessionStorage.setItem(`img_${word}`, cached); } catch (e) {}
+        return; 
+      }
+      
+      // 4. 需要生成新图片
       if (hasGeneratedRef.current || isGeneratingImage) return;
       
       hasGeneratedRef.current = true;
@@ -66,6 +93,7 @@ QUALITY:
         const imageBase64 = `data:${data.mimeType};base64,${data.imageBase64}`;
         setWordImage(imageBase64);
         await saveImageToCache(word, imageBase64);
+        try { sessionStorage.setItem(`img_${word}`, imageBase64); } catch (e) {}
         if (studyRecordId) {
           const imageUrl = await uploadWordImage(word, imageBase64, studyRecordId);
           if (imageUrl) await saveWordMedia({ word, studyRecordId, imageUrl });
