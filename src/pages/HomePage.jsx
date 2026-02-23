@@ -196,7 +196,7 @@ export default function HomePage() {
                                       {record.spelling_number || record.spellingNumber || 'Spelling'}
                                     </h4>
                                     {record.content?.subtitle && (
-                                      <p className="text-sm text-gray-500 mt-0.5">{record.content.subtitle}</p>
+                                      <p className="text-gray-500 mt-0.5">{record.content.subtitle}</p>
                                     )}
                                   </div>
                                 </div>
