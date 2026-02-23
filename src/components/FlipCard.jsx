@@ -32,25 +32,35 @@ function FlipCard({ item, flippedAll, studyRecordId }) {
       hasGeneratedRef.current = true;
       setIsGeneratingImage(true);
       try {
-        // 构建详细的图片生成 prompt
+        // 构建图片生成 prompt - 优化版
         const sentence = item.sentence || '';
         const meaning = item.meaning || '';
-        const wordType = item.word_type || 'word';
         
-        const prompt = `Create a flat illustration, vector art style image that visually represents the word "${word}" in the context of: "${sentence}". 
+        const prompt = `Create a vibrant, detailed illustration for the word "${word}" (${meaning}) in the context: "${sentence}".
 
-Key elements to include:
-- Visual concept: Show the meaning of "${word}" (${meaning}) through a clear, easy-to-understand scene
-- Style: Modern flat illustration, vector art, clean lines, minimal shading
-- Color palette: Soft, harmonious colors with 3-4 main colors maximum
-- Composition: Centered main subject with simple background elements
-- Details: Include subtle visual cues that reference the sentence context
-- Mood: Educational, friendly, and engaging for children
-- NO frames, NO borders, NO decorative outlines around the image
-- NO text or words in the image
-- Clean edges, no gray borders or frames
+CRITICAL REQUIREMENTS:
+- NO square blocks, NO rectangular color patches in background
+- NO geometric shapes as background elements
+- Background should be organic, gradient, or environmental (sky, nature, room, etc.)
 
-The illustration should directly show what "${word}" means in the sentence "${sentence}", making it intuitive for language learners to understand the word's meaning.`;
+STYLE GUIDE:
+- Blend 2D illustration with subtle 3D elements for depth
+- Rich color palette: 4-6 harmonious colors, vibrant but cohesive
+- Consistent warm and friendly art style across all images
+- Soft gradients or natural environments for backgrounds only
+
+COMPOSITION:
+- Center the main subject clearly
+- Add environmental context from the sentence
+- Include small storytelling details that explain the word's meaning
+- Depth through layering: foreground, middle ground, soft background
+
+QUALITY:
+- Clean, crisp lines
+- No harsh edges or borders
+- NO text or letters in the image
+- Suitable for children's educational materials
+- Make the word's meaning immediately obvious from the visual`;
         
         const data = await generateImage(prompt, 1024, 1024);
         const imageBase64 = `data:${data.mimeType};base64,${data.imageBase64}`;
