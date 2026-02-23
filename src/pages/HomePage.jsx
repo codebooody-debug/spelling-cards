@@ -213,8 +213,8 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="mb-8 text-center py-12">
-              <div className="w-20 h-20 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <span className="text-4xl">📚</span>
+              <div className="w-20 h-20 flex items-center justify-center mx-auto mb-6">
+                <span className="text-6xl">📚</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">你还没有任何学习记录</h3>
               <p className="text-gray-500 mb-2">上传你的听写内容，开始智能学习之旅</p>
