@@ -148,7 +148,7 @@ QUALITY:
   };
 
   return (
-    <div className={`card-container min-h-[520px] sm:min-h-[580px] h-auto max-h-[750px] sm:max-h-[850px] cursor-pointer touch-manipulation no-select ${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
+    <div className={`card-container min-h-[600px] sm:min-h-[580px] h-auto max-h-[800px] sm:max-h-[850px] cursor-pointer touch-manipulation no-select ${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
       <div className="card-inner relative w-full h-full">
         <div className="card-front absolute w-full h-full bg-white rounded-2xl shadow border border-gray-200 p-3 sm:p-4 flex flex-col overflow-hidden">
           <div className="flex items-start justify-between mb-2">
