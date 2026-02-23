@@ -201,7 +201,7 @@ export default function HomePage() {
                                   </div>
                                   <button 
                                     onClick={(e) => handleDelete(e, record.id)} 
-                                    className="min-touch flex-shrink-0 flex items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors touch-manipulation touch-feedback ml-2"
+                                    className="min-touch flex-shrink-0 flex items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors touch-manipulation touch-feedback ml-2 opacity-0 group-hover:opacity-100"
                                     title="删除"
                                   >
                                     <Trash2 size={18} />
