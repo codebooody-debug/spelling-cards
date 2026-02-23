@@ -176,19 +176,8 @@ function StudyPage() {
             ))}
           </div>
 
-          {/* 删除按钮 */}
-          <div className="mt-8 flex justify-center">
-            <button 
-              onClick={handleDelete} 
-              className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-            >
-              <Trash2 size={18} />
-              <span>删除此记录</span>
-            </button>
-          </div>
-
           {/* TTS 音频来源切换栏 */}
-          <div className="mt-4 py-4">
+          <div className="mt-8 py-4">
             <div className="flex items-center justify-center gap-6">
               <div className="flex items-center gap-4">
                 {TTS_OPTIONS.map((option) => (
@@ -209,6 +198,17 @@ function StudyPage() {
                 ))}
               </div>
             </div>
+          </div>
+
+          {/* 删除按钮 */}
+          <div className="mt-4 flex justify-center">
+            <button 
+              onClick={handleDelete} 
+              className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <Trash2 size={18} />
+              <span>删除此记录</span>
+            </button>
           </div>
 
           {/* 底部 */}
