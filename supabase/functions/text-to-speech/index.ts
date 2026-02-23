@@ -9,13 +9,15 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // 处理CORS预检请求
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const { text, voice = 'en-US-Neural2-D', speed = 1.0 } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const { text, voice = 'en-US-Neural2-D', speed = 1.0, engine = 'auto' } = body;
+
+    console.log(`[TTS] 请求: engine=${engine}, text=${text?.substring(0, 20)}...`);
 
     if (!text) {
       return new Response(
@@ -24,94 +26,114 @@ serve(async (req) => {
       );
     }
 
-    // 获取API密钥
     const GOOGLE_TTS_API_KEY = Deno.env.get('GOOGLE_TTS_API_KEY');
     const MINIMAX_API_KEY = Deno.env.get('MINIMAX_API_KEY');
 
     let audioContent = null;
+    let usedEngine = '';
+    let errors = [];
 
-    // 优先使用Google Cloud TTS
-    if (GOOGLE_TTS_API_KEY) {
-      console.log('[TTS] 使用Google Cloud TTS');
-      
-      const response = await fetch(
-        `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_TTS_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            input: { text },
-            voice: {
-              languageCode: 'en-US',
-              name: voice,
-              ssmlGender: 'NEUTRAL'
-            },
-            audioConfig: {
-              audioEncoding: 'MP3',
-              speakingRate: speed,
-              pitch: 0
-            }
-          })
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        audioContent = data.audioContent;
+    // ========== Google TTS ==========
+    if (engine === 'google' || (engine === 'auto' && GOOGLE_TTS_API_KEY)) {
+      if (!GOOGLE_TTS_API_KEY) {
+        errors.push('Google: API Key 未设置');
       } else {
-        console.error('[TTS] Google TTS失败:', await response.text());
+        console.log('[TTS] 使用 Google Cloud TTS');
+        try {
+          const response = await fetch(
+            `https://texttospeech.googleapis.com/v1/text:synthesize?key=${GOOGLE_TTS_API_KEY}`,
+            {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                input: { text },
+                voice: { 
+                  languageCode: 'en-US', 
+                  name: voice,
+                  ssmlGender: 'MALE'
+                },
+                audioConfig: { 
+                  audioEncoding: 'MP3', 
+                  speakingRate: speed, 
+                  pitch: 0 
+                }
+              })
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            audioContent = data.audioContent;
+            usedEngine = 'google';
+            console.log('[TTS] Google 成功');
+          } else {
+            const errorText = await response.text();
+            errors.push(`Google: ${errorText}`);
+            console.error('[TTS] Google 失败:', errorText);
+          }
+        } catch (e) {
+          errors.push(`Google: ${e.message}`);
+        }
       }
     }
 
-    // 如果Google失败或没有API key，尝试MiniMax
-    if (!audioContent && MINIMAX_API_KEY) {
-      console.log('[TTS] 使用MiniMax TTS');
-      
-      const response = await fetch('https://api.minimax.chat/v1/t2a_pro', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${MINIMAX_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'speech-01-turbo',
-          text: text,
-          voice_id: 'male-qn-qingse',
-          speed: speed,
-          vol: 1.0,
-          pitch: 0
-        })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.base_resp?.status_code === 0 && data.audio_hex) {
-          // MiniMax返回hex格式，需要转换
-          audioContent = hexToBase64(data.audio_hex);
-        }
+    // ========== MiniMax TTS ==========
+    if (!audioContent && (engine === 'minimax' || (engine === 'auto' && MINIMAX_API_KEY))) {
+      if (!MINIMAX_API_KEY) {
+        errors.push('MiniMax: API Key 未设置');
       } else {
-        console.error('[TTS] MiniMax TTS失败:', await response.text());
+        console.log('[TTS] 使用 MiniMax TTS');
+        const minimaxVoices = ['male-qn-qingse', 'female-shaonv', 'male-yy-jingying', 'female-yy-jiajia'];
+        const selectedVoice = minimaxVoices[text.length % minimaxVoices.length];
+        
+        try {
+          const response = await fetch('https://api.minimax.chat/v1/t2a_pro', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${MINIMAX_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              model: 'speech-01-turbo',
+              text: text,
+              voice_id: selectedVoice,
+              speed: speed,
+              vol: 1.0,
+              pitch: 0
+            })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.base_resp?.status_code === 0 && data.audio_hex) {
+              audioContent = hexToBase64(data.audio_hex);
+              usedEngine = 'minimax';
+              console.log('[TTS] MiniMax 成功');
+            } else {
+              errors.push(`MiniMax: ${data.base_resp?.status_msg || 'API错误'}`);
+            }
+          } else {
+            errors.push(`MiniMax HTTP ${response.status}`);
+          }
+        } catch (e) {
+          errors.push(`MiniMax: ${e.message}`);
+        }
       }
     }
 
     if (!audioContent) {
       return new Response(
-        JSON.stringify({ error: '语音合成失败，请检查API配置' }),
+        JSON.stringify({ error: '语音合成失败', details: errors }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        audio: audioContent,
-        engine: GOOGLE_TTS_API_KEY ? 'google' : 'minimax'
-      }),
+      JSON.stringify({ success: true, audio: audioContent, engine: usedEngine }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
   } catch (error) {
-    console.error('[TTS] 错误:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -119,7 +141,6 @@ serve(async (req) => {
   }
 });
 
-// 辅助函数：hex转base64
 function hexToBase64(hex) {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < hex.length; i += 2) {

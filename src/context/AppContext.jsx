@@ -29,6 +29,7 @@ export function AppProvider({ children }) {
   // 从数据库加载数据
   useEffect(() => {
     const loadData = async () => {
+      setIsLoading(true);  // 每次 user 变化都重新加载
       const supabase = getSupabase();
       try {
         if (isSupabaseConfigured() && supabase && user) {
@@ -42,6 +43,15 @@ export function AppProvider({ children }) {
           if (error) throw error;
           setStudyRecords(data || []);
           console.log(`[加载数据] 从云端加载 ${data?.length || 0} 条记录`);
+        } else if (!user) {
+          // 未登录状态，等待 auth 检查完成
+          console.log('[加载数据] 等待登录状态确认...');
+          // 检查本地存储作为 fallback
+          const records = await localStorageDB.getRecords();
+          if (records.length > 0) {
+            setStudyRecords(records);
+            console.log(`[加载数据] 从本地加载 ${records.length} 条记录`);
+          }
         } else {
           // 本地开发模式
           const records = await localStorageDB.getRecords();

@@ -1,6 +1,9 @@
 # Supabase Configuration
 project_id = "spelling-cards"
 
+[functions.text-to-speech]
+verify_jwt = false
+
 [functions.extract-spelling]
 verify_jwt = false
 

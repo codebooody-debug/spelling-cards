@@ -4,13 +4,13 @@ import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 
 // TTS引擎类型
 export const TTS_ENGINES = {
-  BROWSER: 'browser',  // 浏览器原生
-  ELEVENLABS: 'elevenlabs',  // ElevenLabs API
-  MINIMAX: 'minimax',  // MiniMax API
+  GOOGLE: 'google',      // Google Cloud TTS
+  MINIMAX: 'minimax',    // MiniMax API
+  BROWSER: 'browser',    // 浏览器原生
 };
 
 // 当前使用的引擎
-let currentEngine = TTS_ENGINES.BROWSER;
+let currentEngine = TTS_ENGINES.GOOGLE;
 
 // 音频缓存
 const audioCache = new Map();
@@ -91,7 +91,7 @@ export function playBrowserTTS(text, options = {}) {
  */
 export async function playAITTS(text, options = {}) {
   if (!isSupabaseConfigured()) {
-    throw new Error('Supabase未配置');
+    throw new Error('Supabase未配置 - 请检查 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY');
   }
 
   const supabase = getSupabase();
@@ -100,25 +100,40 @@ export async function playAITTS(text, options = {}) {
   }
 
   // 检查缓存
-  const cacheKey = `${text}_${options.voice || 'default'}`;
+  const cacheKey = `${text}_${options.voice || 'default'}_${options.engine || 'auto'}`;
   if (audioCache.has(cacheKey)) {
     console.log('[TTS] 使用缓存音频');
     return playAudioBlob(audioCache.get(cacheKey));
   }
 
   try {
-    console.log(`[TTS] 调用AI语音合成: ${text.substring(0, 30)}...`);
+    console.log(`[TTS] ========== 开始调用Edge Function ==========`);
+    console.log(`[TTS] 文本: ${text.substring(0, 30)}...`);
+    console.log(`[TTS] 引擎: ${options.engine || 'auto'}`);
+    console.log(`[TTS] Supabase URL: ${supabase.supabaseUrl}`);
     
     const { data, error } = await supabase.functions.invoke('text-to-speech', {
       body: {
         text,
         voice: options.voice || 'en-US-Neural2-D',
-        speed: options.speed || 1.0
+        speed: options.speed || 1.0,
+        engine: options.engine || 'auto'
       }
     });
 
-    if (error) throw error;
-    if (!data?.audio) throw new Error('未返回音频数据');
+    console.log('[TTS] Edge Function 返回:', { data, error });
+
+    if (error) {
+      console.error('[TTS] Edge Function 错误:', error);
+      throw new Error(`Edge Function错误: ${error.message || JSON.stringify(error)}`);
+    }
+    
+    if (!data?.audio) {
+      console.error('[TTS] 无音频数据:', data);
+      throw new Error(data?.error || data?.details?.join(', ') || '未返回音频数据');
+    }
+
+    console.log(`[TTS] 合成成功，使用引擎: ${data.engine || 'unknown'}`);
 
     // 解码base64音频
     const audioBlob = base64ToBlob(data.audio, 'audio/mp3');
@@ -131,9 +146,7 @@ export async function playAITTS(text, options = {}) {
     
   } catch (error) {
     console.error('[TTS] AI合成失败:', error);
-    // 降级到浏览器TTS
-    console.log('[TTS] 降级到浏览器原生TTS');
-    return playBrowserTTS(text, options);
+    throw error;
   }
 }
 
@@ -178,15 +191,18 @@ function base64ToBlob(base64, mimeType) {
  * 主播放函数
  */
 export async function playTTS(text, options = {}) {
+  console.log(`[TTS] 当前引擎: ${currentEngine}, 播放文本: ${text.substring(0, 20)}...`);
+  
   // 根据当前引擎选择播放方式
   switch (currentEngine) {
-    case TTS_ENGINES.ELEVENLABS:
+    case TTS_ENGINES.GOOGLE:
     case TTS_ENGINES.MINIMAX:
       try {
-        return await playAITTS(text, options);
+        return await playAITTS(text, { ...options, engine: currentEngine });
       } catch (error) {
-        console.warn('[TTS] AI引擎失败，降级到浏览器TTS:', error.message);
-        return playBrowserTTS(text, options);
+        console.error('[TTS] AI引擎失败:', error.message);
+        // 不再自动降级，抛出错误让上层处理
+        throw new Error(`${currentEngine} TTS 失败: ${error.message}`);
       }
     
     case TTS_ENGINES.BROWSER:

@@ -173,7 +173,7 @@ export default function HomePage() {
                       const isExpanded = expandedTerms[termKey] !== false;
                       return (
                         <div key={termKey} className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
-                          <div className="p-6">
+                          <div className="px-8 py-6">
                             <button onClick={() => toggleTerm(termKey)} className="w-full flex items-center justify-between text-left py-3 bg-white transition-colors">
                             <h3 className="text-lg font-semibold text-gray-700">{termGroup.term}</h3>
                             <div className="flex items-center gap-2">
@@ -190,9 +190,9 @@ export default function HomePage() {
                                 if (isNaN(numA)) return 1; if (isNaN(numB)) return -1;
                                 return numB - numA;
                               }).map((record) => (
-                                <div key={record.id} onClick={() => handleStudy(record)} className="flex items-center justify-between py-4 cursor-pointer transition-colors">
+                                <div key={record.id} onClick={() => handleStudy(record)} className="flex items-center justify-between py-4 px-4 -mx-4 cursor-pointer transition-all rounded-lg hover:bg-blue-50 hover:shadow-sm group">
                                   <div className="flex-1">
-                                    <h4 className="text-base font-medium text-gray-800">{record.spelling_number || record.spellingNumber || record.content?.title || record.content?.spellingNumber || 'Spelling'}</h4>
+                                    <h4 className="text-base font-medium text-gray-800 group-hover:text-blue-600 transition-colors">{record.spelling_number || record.spellingNumber || record.content?.title || record.content?.spellingNumber || 'Spelling'}</h4>
                                   </div>
                                   <button onClick={(e) => handleDelete(e, record.id)} className="p-2 text-gray-400 hover:text-red-500 rounded-lg transition-colors"><Trash2 size={16} /></button>
                                 </div>
@@ -219,7 +219,7 @@ export default function HomePage() {
           )}
 
           <div className={`bg-white rounded-2xl shadow border overflow-hidden ${hasRecords ? 'border-gray-200' : 'border-blue-200'}`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
-            <div className="p-6">
+            <div className="px-8 py-6">
               <div className="flex items-center gap-2 mb-4"><Sparkles size={20} className="text-blue-500" /><h3 className="font-semibold text-gray-800">{hasRecords ? '继续添加' : '开始'}</h3></div>
               {isProcessing ? (
                 <div className="text-center py-8">

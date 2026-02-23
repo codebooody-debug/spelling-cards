@@ -81,7 +81,7 @@ export default function ConfirmPage() {
         target_word: item.word,
         sentence: item.sentence,
         blanked_sentence: item.blanked,
-        phonetic: '/fəˈnetɪk/',
+        phonetic: enrichedResults[index]?.data?.phonetic || '/fəˈnetɪk/',
         ...enrichedResults[index].data
       }));
 

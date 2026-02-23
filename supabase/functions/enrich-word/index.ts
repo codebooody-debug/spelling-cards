@@ -48,6 +48,7 @@ please generate the following information in JSON format:
 
 {
   "meaning": "中文释义（简洁准确）",
+  "phonetic": "/音标/（使用标准IPA音标）",
   "wordType": "词性（noun/verb/adjective/adverb等）",
   "synonyms": ["同义词1", "同义词2", "同义词3"],
   "antonyms": ["反义词1", "反义词2"],
@@ -101,6 +102,7 @@ Return ONLY the JSON object, no other text.`
     // 格式化结果
     const formattedResult = {
       meaning: result.meaning || '',
+      phonetic: result.phonetic || '',
       wordType: result.wordType || 'noun',
       synonyms: Array.isArray(result.synonyms) ? result.synonyms.slice(0, 3) : [],
       antonyms: Array.isArray(result.antonyms) ? result.antonyms.slice(0, 3) : [],
