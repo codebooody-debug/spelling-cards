@@ -222,7 +222,7 @@ export default function HomePage() {
             </div>
           )}
 
-          <div className={`bg-white rounded-2xl shadow border overflow-hidden ${hasRecords ? 'border-gray-200' : 'border-blue-200'}`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+          <div className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden" onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
             <div className="px-8 py-6">
               <div className="flex items-center gap-2 mb-4"><Sparkles size={20} className="text-blue-500" /><h3 className="font-semibold text-gray-800">{hasRecords ? '继续添加' : '开始'}</h3></div>
               {isProcessing ? (
