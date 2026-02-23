@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState, Component } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppProvider } from './context/AppContext';
 import { ToastProvider } from './components/Toast';
@@ -7,13 +7,27 @@ import { initializeStorage } from './services/init';
 import { getSupabase } from './lib/supabase';
 import './App.css';
 
+// 懒加载包装器，处理加载失败
+const lazyWithRetry = (importFn, name) => {
+  return lazy(() => {
+    return importFn().catch(err => {
+      console.error(`[LazyLoad] 加载 ${name} 失败:`, err);
+      // 如果是模块加载失败，尝试强制刷新
+      if (err.message && err.message.includes('Failed to fetch dynamically imported module')) {
+        console.log('[LazyLoad] 检测到模块加载失败，建议刷新页面');
+      }
+      throw err;
+    });
+  });
+};
+
 // 懒加载页面组件
-const HomePage = lazy(() => import('./pages/HomePage'));
-const ConfirmPage = lazy(() => import('./pages/ConfirmPage'));
-const TermPage = lazy(() => import('./pages/TermPage'));
-const StudyPage = lazy(() => import('./pages/StudyPage'));
-const LoginPage = lazy(() => import('./pages/LoginPage'));
-const AdminPage = lazy(() => import('./pages/AdminPage'));
+const HomePage = lazyWithRetry(() => import('./pages/HomePage'), 'HomePage');
+const ConfirmPage = lazyWithRetry(() => import('./pages/ConfirmPage'), 'ConfirmPage');
+const TermPage = lazyWithRetry(() => import('./pages/TermPage'), 'TermPage');
+const StudyPage = lazyWithRetry(() => import('./pages/StudyPage'), 'StudyPage');
+const LoginPage = lazyWithRetry(() => import('./pages/LoginPage'), 'LoginPage');
+const AdminPage = lazyWithRetry(() => import('./pages/AdminPage'), 'AdminPage');
 
 // 加载中组件
 const PageLoader = () => (
@@ -24,6 +38,66 @@ const PageLoader = () => (
     </div>
   </div>
 );
+
+// 加载错误组件
+const PageLoadError = ({ error, resetErrorBoundary }) => (
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+    <div className="text-center p-8 bg-white rounded-2xl shadow-lg max-w-md">
+      <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <span className="text-2xl">⚠️</span>
+      </div>
+      <h1 className="text-xl font-bold text-gray-800 mb-2">加载失败</h1>
+      <p className="text-gray-600 mb-6">
+        应用已更新，请刷新页面获取最新版本
+      </p>
+      {error && (
+        <div className="bg-gray-100 rounded-lg p-3 mb-6 text-left overflow-auto">
+          <p className="text-xs text-red-600 font-mono">{error.message}</p>
+        </div>
+      )}
+      <button 
+        onClick={() => window.location.reload()} 
+        className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+      >
+        刷新页面
+      </button>
+    </div>
+  </div>
+);
+
+// 带错误处理的 Suspense 包装器
+class SuspenseWithError extends Component {
+  state = { hasError: false, error: null };
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center p-8 bg-white rounded-2xl shadow-lg max-w-md">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-2xl">⚠️</span>
+            </div>
+            <h1 className="text-xl font-bold text-gray-800 mb-2">加载失败</h1>
+            <p className="text-gray-600 mb-6">
+              应用已更新，请刷新页面获取最新版本
+            </p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              刷新页面
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return <Suspense fallback={<PageLoader />}>{this.props.children}</Suspense>;
+  }
+}
 
 // 路由保护组件
 function ProtectedRoute({ children }) {
@@ -104,7 +178,7 @@ function App() {
       <ToastProvider>
         <AppProvider>
           <BrowserRouter>
-            <Suspense fallback={<PageLoader />}>
+            <SuspenseWithError>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/" element={
@@ -134,7 +208,7 @@ function App() {
                 } />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
-            </Suspense>
+            </SuspenseWithError>
           </BrowserRouter>
         </AppProvider>
       </ToastProvider>
