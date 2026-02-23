@@ -172,8 +172,9 @@ export default function HomePage() {
                       const termKey = `${termGroup.grade}-${termGroup.term}`;
                       const isExpanded = expandedTerms[termKey] !== false;
                       return (
-                        <div key={termKey} className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden p-6">
-                          <button onClick={() => toggleTerm(termKey)} className="w-full flex items-center justify-between text-left py-3 bg-white transition-colors">
+                        <div key={termKey} className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
+                          <div className="p-6">
+                            <button onClick={() => toggleTerm(termKey)} className="w-full flex items-center justify-between text-left py-3 bg-white transition-colors">
                             <h3 className="text-lg font-semibold text-gray-700">{termGroup.term}</h3>
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-400">{termGroup.records.length} 个</span>
@@ -198,6 +199,7 @@ export default function HomePage() {
                               ))}
                             </div>
                           )}
+                          </div>
                         </div>
                       );
                     })}
