@@ -114,28 +114,28 @@ function LoginPage() {
 
         {/* 邮箱登录 */}
         <form onSubmit={handleEmailLogin} className="w-full">
-          <div className="relative">
-            <div className="flex gap-2 items-center">
-              <div className={`transition-all duration-300 ease-out ${email ? 'w-[calc(100%-84px)]' : 'w-full'}`}>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="输入邮箱地址"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  />
-                </div>
+          <div className="flex gap-2 items-center">
+            <div className={`transition-all duration-300 ease-out ${email ? 'w-[calc(100%-84px)]' : 'w-full'}`}>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="输入邮箱地址"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                />
               </div>
+            </div>
+            {email && (
               <button
                 type="submit"
-                disabled={isLoading || !email}
-                className={`bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0 ${email ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4 w-0 px-0 overflow-hidden invisible'}`}
+                disabled={isLoading}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0 animate-in slide-in-from-right-2"
               >
                 发送
               </button>
-            </div>
+            )}
           </div>
           <p className="text-xs text-gray-400 mt-2">我们会发送登录链接到你的邮箱</p>
         </form>
