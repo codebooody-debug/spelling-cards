@@ -141,7 +141,7 @@ export default function HomePage() {
         <div className="px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-500 w-12 h-12 rounded-lg flex items-center justify-center"><span className="text-2xl">📝</span></div>
+              <div className="text-4xl">📚</div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-800">单词听写助手</h1>
                 <p className="text-sm text-gray-500">{hasRecords ? `已保存 ${studyRecords.length} 个听写记录` : '拍照或上传听写照片开始学习'}</p>
@@ -214,7 +214,7 @@ export default function HomePage() {
           ) : (
             <div className="mb-8 text-center py-12">
               <div className="w-20 h-20 flex items-center justify-center mx-auto mb-6">
-                <span className="text-6xl">📚</span>
+                <span className="text-6xl">📝</span>
               </div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">你还没有任何学习记录</h3>
               <p className="text-gray-500 mb-2">上传你的听写内容，开始智能学习之旅</p>
