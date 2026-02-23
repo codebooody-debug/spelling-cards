@@ -193,8 +193,11 @@ export default function HomePage() {
                                 <div key={record.id} onClick={() => handleStudy(record)} className="flex items-center justify-between py-4 px-4 -mx-4 cursor-pointer transition-all rounded-lg hover:bg-gray-50 group">
                                   <div className="flex-1">
                                     <h4 className="text-base font-medium text-gray-800 group-hover:text-gray-900 transition-colors">
-                                      {record.spelling_number || record.spellingNumber || 'Spelling'}{record.content?.subtitle ? ` ${record.content.subtitle}` : ''}
+                                      {record.spelling_number || record.spellingNumber || 'Spelling'}
                                     </h4>
+                                    {record.content?.subtitle && (
+                                      <p className="text-sm text-gray-500 mt-0.5">{record.content.subtitle}</p>
+                                    )}
                                   </div>
                                 </div>
                               ))}
