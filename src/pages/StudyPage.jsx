@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import FlipCard from '../components/FlipCard';
-import { ArrowLeft, BookOpen, RotateCcw } from 'lucide-react';
+import { X, BookOpen, RotateCcw } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { setTTSEngine, getTTSEngine } from '../services/tts';
+import { useToast } from '../components/Toast';
 
 const TTS_OPTIONS = [
   { key: 'google', label: 'Google' },
@@ -14,30 +15,49 @@ const TTS_OPTIONS = [
 function StudyPage() {
   const { contentId } = useParams();
   const navigate = useNavigate();
-  const { studyRecords } = useApp();
+  const { studyRecords, isLoading } = useApp();
+  const { success } = useToast();
+  const [renderError, setRenderError] = useState(null);
   
   const [flippedAll, setFlippedAll] = useState(false);
-  const [currentEngine, setCurrentEngine] = useState(getTTSEngine());
-
-  // 从 localStorage 恢复 TTS 设置
-  useEffect(() => {
+  const [currentEngine, setCurrentEngine] = useState(() => {
     const saved = localStorage.getItem('tts-engine');
-    if (saved) {
-      setTTSEngine(saved);
-      setCurrentEngine(saved);
+    const initial = saved || 'google';
+    setTTSEngine(initial);
+    if (!saved) {
+      localStorage.setItem('tts-engine', 'google');
     }
+    return initial;
+  });
+
+  useEffect(() => {
+    console.log('[StudyPage] 当前 TTS 引擎:', currentEngine);
   }, []);
 
   const handleEngineChange = (engine) => {
+    if (engine === currentEngine) {
+      console.log('[StudyPage] 重复点击相同引擎，忽略');
+      return;
+    }
+    
     setTTSEngine(engine);
     setCurrentEngine(engine);
     localStorage.setItem('tts-engine', engine);
+    
+    const engineName = TTS_OPTIONS.find(opt => opt.key === engine)?.label || engine;
+    success(`已切换到 ${engineName} 音源`);
+    console.log(`[StudyPage] TTS 引擎切换为: ${engine}`);
   };
 
-  console.log('[StudyPage] contentId:', contentId);
+  console.log('[StudyPage] contentId:', contentId, 'type:', typeof contentId);
   console.log('[StudyPage] studyRecords count:', studyRecords.length);
+  console.log('[StudyPage] isLoading:', isLoading);
+  console.log('[StudyPage] studyRecords ids:', studyRecords.map(r => r.id));
   
-  const record = studyRecords.find(r => r.id === contentId);
+  const record = studyRecords.find(r => {
+    console.log('[StudyPage] comparing:', r.id, '===', contentId, '?', r.id === contentId);
+    return r.id === contentId;
+  });
   console.log('[StudyPage] found record:', record ? 'yes' : 'no');
   
   const spellingData = record?.content;
@@ -48,12 +68,54 @@ function StudyPage() {
     document.querySelectorAll('.card-container').forEach(card => card.classList.remove('flipped'));
   };
 
-  if (!record || !spellingData) {
+  // 调试：显示所有信息
+  console.log('[StudyPage] 最终检查:', {
+    isLoading,
+    contentId,
+    recordFound: !!record,
+    hasSpellingData: !!spellingData,
+    itemsCount: spellingData?.items?.length
+  });
+
+  // 如果还在加载中
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
         <div className="text-center">
-          <p className="text-gray-500">学习记录不存在</p>
-          <button onClick={() => navigate('/')} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg">返回首页</button>
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-500">加载中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 记录不存在 - 显示详细信息帮助调试
+  if (!record) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center bg-white p-8 rounded-xl shadow max-w-md">
+          <p className="text-gray-500 mb-2">学习记录不存在</p>
+          <p className="text-xs text-gray-400 mb-2">ID: {contentId}</p>
+          <p className="text-xs text-gray-400 mb-4">已加载记录: {studyRecords.length} 条</p>
+          <p className="text-xs text-gray-400 mb-4">ID列表: {studyRecords.map(r => r.id?.substring?.(0, 8) || r.id).join(', ')}</p>
+          <button onClick={() => navigate('/')} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+            返回首页
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 数据格式错误
+  if (!spellingData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center bg-white p-8 rounded-xl shadow max-w-md">
+          <p className="text-gray-500 mb-2">记录数据格式错误</p>
+          <p className="text-xs text-gray-400 mb-4">record.content 为空</p>
+          <button onClick={() => navigate('/')} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+            返回首页
+          </button>
         </div>
       </div>
     );
@@ -66,8 +128,8 @@ function StudyPage() {
         <div className="max-w-[1400px] mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <ArrowLeft size={24} className="text-gray-600" />
+              <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="关闭">
+                <X size={24} className="text-gray-600" />
               </button>
               <div className="bg-blue-500 p-2 rounded-lg"><BookOpen className="text-white" size={24} /></div>
               <div>
@@ -103,9 +165,8 @@ function StudyPage() {
           </div>
 
           {/* TTS 音频来源切换栏 */}
-          <div className="mt-8 py-4 bg-white rounded-xl shadow border border-gray-200">
+          <div className="mt-8 py-4">
             <div className="flex items-center justify-center gap-6">
-              <span className="text-sm text-gray-500">音频来源:</span>
               <div className="flex items-center gap-4">
                 {TTS_OPTIONS.map((option) => (
                   <button
