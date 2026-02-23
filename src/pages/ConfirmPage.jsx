@@ -127,11 +127,11 @@ export default function ConfirmPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-[800px] mx-auto px-4 py-4">
+    <div className="min-h-screen bg-white no-horizontal-scroll">
+      <header className="bg-white border-b border-gray-200 safe-area-top">
+        <div className="max-w-[800px] mx-auto px-4 py-4 safe-area-left safe-area-right">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+            <button onClick={() => navigate('/')} className="min-touch flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation touch-feedback">
               <ArrowLeft size={24} className="text-gray-600" />
             </button>
             <div className="flex items-center gap-3">
@@ -159,7 +159,7 @@ export default function ConfirmPage() {
                 </div>
                 <button
                   onClick={() => setIsEditing(!isEditing)}
-                  className="text-sm bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5"
+                  className="min-touch text-sm bg-white/20 hover:bg-white/30 px-3 py-2 rounded-lg transition-colors flex items-center gap-1.5 touch-manipulation touch-feedback"
                 >
                   <Edit2 size={14} />{isEditing ? '完成编辑' : '编辑'}
                 </button>
@@ -265,12 +265,12 @@ export default function ConfirmPage() {
             </div>
           </div>
 
-          <div className="flex gap-3 pt-4">
-            <button onClick={() => navigate('/')} disabled={isGenerating} className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50">重新上传</button>
+          <div className="flex gap-3 pt-4 safe-area-bottom">
+            <button onClick={() => navigate('/')} disabled={isGenerating} className="min-touch px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors disabled:opacity-50 touch-manipulation">重新上传</button>
             <button
               onClick={handleConfirm}
               disabled={isGenerating}
-              className="flex-1 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 font-medium"
+              className="min-touch flex-1 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2 font-medium touch-manipulation touch-feedback"
             >
               {isGenerating ? (
                 <><Loader2 size={18} className="animate-spin" />AI生成单词信息中...</>

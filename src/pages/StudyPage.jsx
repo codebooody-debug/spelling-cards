@@ -130,25 +130,26 @@ function StudyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gray-100 no-horizontal-scroll">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-[1400px] mx-auto px-4 py-4">
+      <header className="bg-white border-b border-gray-200 safe-area-top">
+        <div className="max-w-[1400px] mx-auto px-4 py-4 safe-area-left safe-area-right">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-500 p-2 rounded-lg"><BookOpen className="text-white" size={24} /></div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-800">{record.grade} {record.term} {record.spelling_number || record.spellingNumber || 'Spelling'}</h1>
+              <div className="bg-blue-500 p-2 rounded-lg min-touch flex items-center justify-center"><BookOpen className="text-white" size={24} /></div>
+              <div className="min-w-0">
+                <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{record.grade} {record.term}</h1>
+                <p className="text-sm text-gray-500 sm:hidden">{spellingData.total_items} 个单词</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <div className="text-right hidden sm:block">
                 <p className="text-sm text-gray-600"><span className="font-medium">{spellingData.total_items}</span> 个单词</p>
               </div>
-              <button onClick={resetAll} className="p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors" title="重置所有卡片">
+              <button onClick={resetAll} className="min-touch flex items-center justify-center p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors touch-manipulation touch-feedback" title="重置所有卡片">
                 <RotateCcw size={20} className="text-gray-600" />
               </button>
-              <button onClick={() => navigate('/')} className="p-2 hover:bg-gray-100 rounded-lg transition-colors" title="关闭">
+              <button onClick={() => navigate('/')} className="min-touch flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation touch-feedback" title="关闭">
                 <X size={24} className="text-gray-600" />
               </button>
             </div>
@@ -177,34 +178,32 @@ function StudyPage() {
           </div>
 
           {/* TTS 音频来源切换栏 */}
-          <div className="mt-8 py-4">
-            <div className="flex items-center justify-center gap-6">
-              <div className="flex items-center gap-4">
-                {TTS_OPTIONS.map((option) => (
-                  <button
-                    key={option.key}
-                    onClick={() => handleEngineChange(option.key)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm transition-all ${
-                      currentEngine === option.key
-                        ? 'bg-blue-100 text-blue-700 font-medium'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span className={`w-2 h-2 rounded-full ${
-                      currentEngine === option.key ? 'bg-blue-500' : 'bg-gray-300'
-                    }`}></span>
-                    {option.label}
-                  </button>
-                ))}
-              </div>
+          <div className="mt-6 py-4 safe-area-bottom">
+            <div className="flex items-center justify-center gap-4 flex-wrap">
+              {TTS_OPTIONS.map((option) => (
+                <button
+                  key={option.key}
+                  onClick={() => handleEngineChange(option.key)}
+                  className={`min-touch flex items-center gap-2 px-4 py-2 rounded-full text-sm transition-all touch-manipulation touch-feedback ${
+                    currentEngine === option.key
+                      ? 'bg-blue-100 text-blue-700 font-medium'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${
+                    currentEngine === option.key ? 'bg-blue-500' : 'bg-gray-300'
+                  }`}></span>
+                  {option.label}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* 删除按钮 */}
-          <div className="mt-4 flex justify-center">
+          <div className="mt-4 flex justify-center safe-area-bottom">
             <button 
               onClick={handleDelete} 
-              className="flex items-center gap-2 px-4 py-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              className="min-touch flex items-center gap-2 px-4 py-3 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors touch-manipulation touch-feedback"
             >
               <Trash2 size={18} />
               <span>删除此记录</span>
@@ -212,7 +211,7 @@ function StudyPage() {
           </div>
 
           {/* 底部 */}
-          <footer className="mt-12 py-8">
+          <footer className="mt-8 py-6 safe-area-bottom">
             <p className="text-center text-sm text-gray-400">{spellingData.title} · {spellingData.created_at}</p>
           </footer>
         </div>

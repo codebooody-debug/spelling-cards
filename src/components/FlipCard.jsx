@@ -148,11 +148,11 @@ QUALITY:
   };
 
   return (
-    <div className={`card-container min-h-[450px] sm:min-h-[550px] h-auto max-h-[700px] sm:max-h-[800px] cursor-pointer ${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
+    <div className={`card-container min-h-[450px] sm:min-h-[550px] h-auto max-h-[700px] sm:max-h-[800px] cursor-pointer touch-manipulation no-select ${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
       <div className="card-inner relative w-full h-full">
         <div className="card-front absolute w-full h-full bg-white rounded-2xl shadow border border-gray-200 p-3 sm:p-4 flex flex-col overflow-hidden">
           <div className="flex items-start justify-between mb-2">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold text-gray-900">{item.target_word}</span>
                 <span className="text-sm text-gray-500">{item.phonetic}</span>
@@ -160,10 +160,10 @@ QUALITY:
               {item.meaning && <div className="mt-0.5"><span className="text-sm text-gray-600">{item.meaning}</span><span className="text-xs text-gray-400 ml-1">· {item.word_type}</span></div>}
             </div>
             <div className="flex items-center gap-1.5">
-              <button onClick={(e) => playAudio(e, item.target_word)} disabled={isLoading} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${getButtonClass(true)}`} title="播放单词">
+              <button onClick={(e) => playAudio(e, item.target_word)} disabled={isLoading} className={`min-touch w-10 h-10 rounded-full flex items-center justify-center transition-all touch-manipulation touch-feedback ${getButtonClass(true)}`} title="播放单词">
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <span className="text-xs font-bold">Aa</span>}
               </button>
-              <button onClick={(e) => playAudio(e, item.sentence)} disabled={isLoading} className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${getButtonClass(false)}`} title="播放例句">
+              <button onClick={(e) => playAudio(e, item.sentence)} disabled={isLoading} className={`min-touch w-10 h-10 rounded-full flex items-center justify-center transition-all touch-manipulation touch-feedback ${getButtonClass(false)}`} title="播放例句">
                 {isLoading ? <Loader2 size={14} className="animate-spin" /> : <Volume2 size={14} className={isPlaying ? 'animate-pulse' : ''} />}
               </button>
             </div>
@@ -182,9 +182,9 @@ QUALITY:
         </div>
         <div className="card-back absolute w-full h-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow border border-blue-200 p-3 sm:p-5 flex flex-col">
           <div className="flex items-center justify-between mb-3"><span className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">更多例句</span></div>
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto scroll-smooth">
             {item.practiceSentences?.length > 0 ? <div className="space-y-4">{item.practiceSentences.slice(0, 3).map((s, i) => <div key={i} className="flex flex-col gap-2">
-              <button onClick={(e) => playAudio(e, s.replace(/________/g, item.target_word))} className="self-end p-1.5 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors" title="播放">
+              <button onClick={(e) => playAudio(e, s.replace(/________/g, item.target_word))} className="min-touch self-end p-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors touch-manipulation touch-feedback" title="播放">
                 <Volume2 size={16} />
               </button>
               <div className="p-3 bg-white/70 rounded-lg"><p className="text-base text-gray-800 leading-relaxed">{s.replace(/________/g, item.target_word)}</p></div>

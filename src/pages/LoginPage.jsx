@@ -74,7 +74,7 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4 safe-area-top safe-area-bottom safe-area-left safe-area-right no-horizontal-scroll">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -94,7 +94,7 @@ function LoginPage() {
         <button
           onClick={handleGoogleLogin}
           disabled={isLoading}
-          className="w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="min-touch w-full flex items-center justify-center gap-3 bg-white border-2 border-gray-200 hover:border-gray-300 text-gray-700 font-medium py-3 px-4 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation touch-feedback"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -131,7 +131,7 @@ function LoginPage() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-0 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                className="min-touch w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-0 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap touch-manipulation touch-feedback"
               >
                 发送
               </button>

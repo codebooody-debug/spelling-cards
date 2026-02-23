@@ -136,9 +136,9 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="bg-white border-b border-gray-200">
-        <div className="px-3 sm:px-4 py-3 sm:py-4">
+    <div className="min-h-screen bg-gray-100 no-horizontal-scroll">
+      <header className="bg-white border-b border-gray-200 safe-area-top">
+        <div className="px-3 sm:px-4 py-3 sm:py-4 safe-area-left safe-area-right">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="text-3xl sm:text-5xl">📚</div>
@@ -149,10 +149,10 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
               {user && <div className="flex items-center gap-2 text-sm text-gray-600"><User size={16} /><span className="hidden sm:inline">{user.email}</span></div>}
-              <button onClick={() => navigate('/admin')} className="p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors" title="管理面板">
+              <button onClick={() => navigate('/admin')} className="min-touch flex items-center justify-center p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors touch-manipulation touch-feedback" title="管理面板">
                 <Settings size={20} />
               </button>
-              <button onClick={handleLogout} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="退出登录"><LogOut size={20} /></button>
+              <button onClick={handleLogout} className="min-touch flex items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors touch-manipulation touch-feedback" title="退出登录"><LogOut size={20} /></button>
             </div>
           </div>
         </div>
@@ -173,8 +173,8 @@ export default function HomePage() {
                       const isExpanded = expandedTerms[termKey] !== false;
                       return (
                         <div key={termKey} className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
-                          <div className="px-4 sm:px-8 py-4 sm:py-6">
-                            <button onClick={() => toggleTerm(termKey)} className="w-full flex items-center justify-between text-left py-2 sm:py-3 bg-white cursor-pointer transition-colors">
+                          <div className="px-4 sm:px-6 py-3 sm:py-4 safe-area-left safe-area-right">
+                            <button onClick={() => toggleTerm(termKey)} className="min-touch w-full flex items-center justify-between text-left py-2 sm:py-3 bg-white cursor-pointer transition-colors touch-manipulation">
                             <h3 className="text-base sm:text-lg font-semibold text-gray-700">{termGroup.term}</h3>
                             <div className="flex items-center gap-2">
                               <span className="text-sm text-gray-400">{termGroup.records.length} 个</span>
@@ -190,15 +190,22 @@ export default function HomePage() {
                                 if (isNaN(numA)) return 1; if (isNaN(numB)) return -1;
                                 return numB - numA;
                               }).map((record) => (
-                                <div key={record.id} onClick={() => handleStudy(record)} className="flex items-center justify-between py-4 px-4 -mx-4 cursor-pointer transition-all rounded-lg hover:bg-gray-50 group">
-                                  <div className="flex-1">
-                                    <h4 className="text-base font-medium text-gray-800 group-hover:text-gray-900 transition-colors">
+                                <div key={record.id} className="flex items-center justify-between py-4 px-4 -mx-4 rounded-lg hover:bg-gray-50 group">
+                                  <div onClick={() => handleStudy(record)} className="flex-1 min-w-0 cursor-pointer touch-manipulation">
+                                    <h4 className="text-base font-medium text-gray-800 group-hover:text-gray-900 transition-colors truncate">
                                       {record.spelling_number || record.spellingNumber || 'Spelling'}
                                     </h4>
                                     {record.content?.subtitle && (
-                                      <p className="text-gray-500 mt-0.5">{record.content.subtitle}</p>
+                                      <p className="text-gray-500 mt-0.5 text-sm truncate">{record.content.subtitle}</p>
                                     )}
                                   </div>
+                                  <button 
+                                    onClick={(e) => handleDelete(e, record.id)} 
+                                    className="min-touch flex-shrink-0 flex items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors touch-manipulation touch-feedback ml-2"
+                                    title="删除"
+                                  >
+                                    <Trash2 size={18} />
+                                  </button>
                                 </div>
                               ))}
                             </div>
