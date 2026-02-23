@@ -115,7 +115,7 @@ function LoginPage() {
         {/* 邮箱登录 */}
         <form onSubmit={handleEmailLogin} className="w-full">
           <div className="flex gap-2 items-center">
-            <div className={`transition-all duration-300 ease-out ${email ? 'w-[calc(100%-84px)]' : 'w-full'}`}>
+            <div className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${email ? 'w-[calc(100%-84px)]' : 'w-full'}`}>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input
@@ -127,15 +127,15 @@ function LoginPage() {
                 />
               </div>
             </div>
-            {email && (
+            <div className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${email ? 'w-[84px] opacity-100' : 'w-0 opacity-0'}`}>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap shrink-0 animate-in slide-in-from-right-2"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-0 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 发送
               </button>
-            )}
+            </div>
           </div>
           <p className="text-xs text-gray-400 mt-2">我们会发送登录链接到你的邮箱</p>
         </form>
