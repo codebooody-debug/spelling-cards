@@ -168,7 +168,7 @@ QUALITY:
               </button>
             </div>
           </div>
-          <div className="rounded-2xl w-[280px] h-[280px] mx-auto flex items-center justify-center mb-2 sm:mb-3 shrink-0 overflow-hidden bg-white">
+          <div className="rounded-2xl w-[320px] h-[320px] sm:w-[280px] sm:h-[280px] mx-auto flex items-center justify-center mb-2 sm:mb-3 shrink-0 overflow-hidden bg-white">
             {isGeneratingImage ? <div className="flex flex-col items-center text-gray-500"><Loader2 size={32} className="animate-spin mb-2" /><span className="text-sm">生成图片中...</span></div> :
              wordImage ? <img src={wordImage} alt={item.target_word} className="w-full h-full object-cover rounded-xl" onError={() => setImageError('图片加载失败')} /> :
              imageError ? <div className="flex flex-col items-center text-gray-400"><ImageIcon size={40} className="mb-2" /><span className="text-sm text-center px-4">{item.target_word}</span></div> :
