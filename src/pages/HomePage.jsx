@@ -173,7 +173,7 @@ export default function HomePage() {
                       const isExpanded = expandedTerms[termKey] !== false;
                       return (
                         <div key={termKey} className="bg-white rounded-2xl shadow border border-gray-200 overflow-hidden">
-                          <div className="px-4 sm:px-6 py-3 sm:py-4 safe-area-left safe-area-right">
+                          <div className="px-4 sm:px-8 py-4 sm:py-6 safe-area-left safe-area-right">
                             <button onClick={() => toggleTerm(termKey)} className="min-touch w-full flex items-center justify-between text-left py-2 sm:py-3 bg-white cursor-pointer transition-colors touch-manipulation">
                             <h3 className="text-base sm:text-lg font-semibold text-gray-700">{termGroup.term}</h3>
                             <div className="flex items-center gap-2">
@@ -190,7 +190,7 @@ export default function HomePage() {
                                 if (isNaN(numA)) return 1; if (isNaN(numB)) return -1;
                                 return numB - numA;
                               }).map((record) => (
-                                <div key={record.id} className="flex items-center justify-between py-4 px-4 -mx-4 rounded-lg hover:bg-gray-50 group">
+                                <div key={record.id} className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-gray-50 group">
                                   <div onClick={() => handleStudy(record)} className="flex-1 min-w-0 cursor-pointer touch-manipulation">
                                     <h4 className="text-base font-medium text-gray-800 group-hover:text-gray-900 transition-colors truncate">
                                       {record.spelling_number || record.spellingNumber || 'Spelling'}
