@@ -115,20 +115,20 @@ function LoginPage() {
         {/* 邮箱登录 */}
         <form onSubmit={handleEmailLogin}>
           <div className="flex gap-2">
-            <div className="flex-1 relative">
+            <div className={`relative transition-all duration-300 ease-out ${email ? 'flex-[0.7]' : 'flex-1'}`}>
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="输入邮箱地址"
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               />
             </div>
             <button
               type="submit"
               disabled={isLoading || !email}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className={`bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-xl transition-all duration-300 ease-out disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap ${email ? 'opacity-100 translate-x-0 w-auto' : 'opacity-0 translate-x-4 w-0 px-0 overflow-hidden'}`}
             >
               发送
             </button>
