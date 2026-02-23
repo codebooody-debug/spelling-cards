@@ -74,13 +74,11 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+    <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="bg-blue-500 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <BookOpen className="text-white" size={32} />
-          </div>
+          <div className="text-5xl mb-4">📚</div>
           <h1 className="text-2xl font-bold text-gray-800">单词听写助手</h1>
           <p className="text-gray-500 mt-2">登录以同步你的学习记录</p>
         </div>
