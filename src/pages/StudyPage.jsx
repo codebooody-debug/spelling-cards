@@ -161,7 +161,7 @@ function StudyPage() {
         <div className="max-w-[1400px] mx-auto px-4">
           {/* 标题 */}
           <div className="mb-6">
-            <h2 className="text-lg font-medium text-gray-700">{spellingData.title}</h2>
+            <h2 className="text-lg font-medium text-gray-700">{spellingData.subtitle || spellingData.title}</h2>
           </div>
 
           {/* 卡片网格 */}
