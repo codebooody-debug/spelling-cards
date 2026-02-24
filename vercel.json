@@ -5,5 +5,9 @@
   "framework": "vite",
   "github": {
     "silent": false
-  }
+  },
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
 }
