@@ -113,15 +113,19 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8 sm:p-4 safe-area-top safe-area-bottom safe-area-left safe-area-right no-horizontal-scroll">
-      <div className="w-full max-w-sm sm:max-w-2xl">
-        {/* Logo - 移动端图片更上移 v4 */}
-        <div className="text-center mb-0 sm:mb-2">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-start px-4 pt-0 pb-8 sm:px-4 sm:py-4 safe-area-left safe-area-right no-horizontal-scroll overflow-y-auto">
+      <div className="w-full max-w-sm sm:max-w-2xl mt-0">
+        {/* Logo - 移动端图片更上移 v5 */}
+        <div className="text-center mb-0 sm:mb-2 relative">
           <img 
-            src="/login-banner.jpg?v=4&t=1771928400" 
+            src="/login-banner.jpg?v=5" 
             alt="单词听写助手" 
-            className="w-[120%] sm:w-[140%] mx-auto -ml-[10%] sm:-ml-[20%] mb-1 sm:mb-2 rounded-2xl -mt-20 sm:-mt-4" 
-            style={{marginTop: '-80px'}}
+            className="w-[120%] sm:w-[140%] mx-auto -ml-[10%] sm:-ml-[20%] mb-1 sm:mb-2 rounded-2xl relative"
+            style={{
+              marginTop: '-60px',
+              position: 'relative',
+              top: '-20px'
+            }}
           />
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">单词听写助手</h1>
           <p className="text-sm sm:text-base text-gray-500 mt-1">登录以同步你的学习记录</p>
