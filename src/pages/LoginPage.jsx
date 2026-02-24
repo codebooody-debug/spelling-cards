@@ -120,7 +120,7 @@ function LoginPage() {
           <p className="text-sm sm:text-base text-gray-500 mt-1">登录以同步你的学习记录</p>
         </div>
 
-        {/* 登录表单区域 - 整体下移 */}
+        {/* 登录表单区域 - 整体下移 [2026-02-24更新] */}
         <div className="mt-8 sm:mt-12">
         {/* 错误提示 */}
         {error && (
