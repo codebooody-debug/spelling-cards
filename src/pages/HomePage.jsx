@@ -153,8 +153,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 no-horizontal-scroll">
       <header className="bg-white border-b border-gray-200 safe-area-top">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12 py-3 sm:py-4 safe-area-left safe-area-right">
-          <div className="flex items-center justify-between">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-3 sm:py-4 safe-area-left safe-area-right">
+          <div className="flex items-center justify-center sm:justify-between relative">
             <div className="flex items-center gap-3">
               <img src="/icons/icon-180x180.png" alt="单词听写助手" className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl" />
               <div>
@@ -162,7 +162,7 @@ export default function HomePage() {
                 <p className="hidden sm:block text-sm text-gray-500">{hasRecords ? `已保存 ${studyRecords.length} 个听写记录` : '拍照或上传听写照片开始学习'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-3" ref={mobileMenuRef}>
+            <div className="flex items-center gap-1 sm:gap-3 absolute right-0 sm:relative" ref={mobileMenuRef}>
               {user && <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600"><User size={16} /><span className="hidden sm:inline">{user.email}</span></div>}
               
               {/* 桌面端显示独立按钮 */}
