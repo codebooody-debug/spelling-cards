@@ -118,9 +118,9 @@ function LoginPage() {
         {/* Logo - 移动端图片 v7 缩小宽度并下移 */}
         <div className="text-center mb-0 sm:mb-2 relative overflow-visible">
           <img 
-            src="/login-banner.jpg?v=7" 
+            src="/login-banner.jpg?v=8" 
             alt="单词听写助手" 
-            className="w-full sm:w-[140%] mb-1 sm:mb-2 rounded-2xl relative block"
+            className="w-[90%] sm:w-[140%] mb-1 sm:mb-2 rounded-2xl relative block"
             style={{
               marginTop: '20px',
               position: 'relative',
