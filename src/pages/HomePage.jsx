@@ -163,7 +163,7 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex items-center gap-1 sm:gap-3 absolute right-0 sm:relative" ref={mobileMenuRef}>
-              {user && <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600"><User size={16} /><span className="hidden sm:inline">{user.email}</span></div>}
+              {user && <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600"><span className="hidden sm:inline">{user.email}</span></div>}
               
               {/* 桌面端显示独立按钮 */}
               <div className="hidden sm:flex items-center gap-2">
