@@ -150,11 +150,11 @@ QUALITY:
   return (
     <div className={`card-container min-h-[600px] sm:min-h-[580px] h-auto max-h-[800px] sm:max-h-[850px] cursor-pointer touch-manipulation no-select ${isFlipped ? 'flipped' : ''}`} onClick={handleFlip}>
       <div className="card-inner relative w-full h-full">
-        <div className="card-front absolute w-full h-full bg-white rounded-2xl shadow border border-gray-200 p-3 sm:p-4 flex flex-col overflow-hidden">
-          <div className="flex items-start justify-between mb-4">
+        <div className="card-front absolute w-full h-full bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 flex flex-col overflow-hidden">
+          <div className="flex items-start justify-between mb-2">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-gray-900">{item.target_word}</span>
+                <span className="text-xl sm:text-lg font-bold text-gray-900">{item.target_word}</span>
                 <span className="text-sm text-gray-500">{item.phonetic}</span>
               </div>
               {item.meaning && <div className="mt-0.5"><span className="text-sm text-gray-600">{item.meaning}</span><span className="text-xs text-gray-400 ml-1">· {item.word_type}</span></div>}
@@ -168,28 +168,28 @@ QUALITY:
               </button>
             </div>
           </div>
-          <div className="rounded-2xl w-[320px] h-[320px] sm:w-[280px] sm:h-[280px] mx-auto flex items-center justify-center my-4 sm:my-3 shrink-0 overflow-hidden bg-white">
+          <div className="rounded-2xl w-[320px] h-[320px] sm:w-[280px] sm:h-[280px] mx-auto flex items-center justify-center mt-2 mb-2 shrink-0 overflow-hidden bg-white">
             {isGeneratingImage ? <div className="flex flex-col items-center text-gray-500"><Loader2 size={32} className="animate-spin mb-2" /><span className="text-sm">生成图片中...</span></div> :
              wordImage ? <img src={wordImage} alt={item.target_word} className="w-full h-full object-cover rounded-xl" onError={() => setImageError('图片加载失败')} /> :
              imageError ? <div className="flex flex-col items-center text-gray-400"><ImageIcon size={40} className="mb-2" /><span className="text-sm text-center px-4">{item.target_word}</span></div> :
              <span className="text-6xl">🎨</span>}
           </div>
-          <div className="flex-1 min-h-0 overflow-y-auto mt-4 sm:mt-3 mb-2"><p className="text-base text-gray-700 leading-relaxed">{renderHighlightedSentence()}</p></div>
+          <div className="flex-1 min-h-0 overflow-y-auto mt-2 sm:mt-2 mb-2"><p className="text-base text-gray-700 leading-relaxed">{renderHighlightedSentence()}</p></div>
           <div className="pt-2 border-t border-gray-100">
             {item.synonyms?.length > 0 && <div className="mb-1 flex items-center flex-wrap gap-2"><span className="w-3 h-3 rounded-full bg-blue-500/50 shrink-0" title="同义词"></span><span className="text-sm text-gray-700 font-medium">{item.synonyms.join(' · ')}</span></div>}
             {item.antonyms?.length > 0 && <div className="flex items-center flex-wrap gap-2"><span className="w-3 h-3 rounded-full bg-red-500/50 shrink-0" title="反义词"></span><span className="text-sm text-gray-700 font-medium">{item.antonyms.join(' · ')}</span></div>}
           </div>
         </div>
-        <div className="card-back absolute w-full h-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow border border-blue-200 p-3 sm:p-5 flex flex-col">
+        <div className="card-back absolute w-full h-full bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-5 sm:p-6 flex flex-col">
           <div className="flex items-center justify-between mb-3"><span className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">更多例句</span></div>
-          <div className="flex-1 overflow-y-auto scroll-smooth">
-            {item.practiceSentences?.length > 0 ? <div className="space-y-4">{item.practiceSentences.slice(0, 3).map((s, i) => <div key={i} className="flex flex-col gap-2">
-              <button onClick={(e) => playAudio(e, s.replace(/________/g, item.target_word))} className="min-touch self-end p-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors touch-manipulation touch-feedback" title="播放">
-                <Volume2 size={16} />
+          <div className="flex-1 overflow-y-auto scroll-smooth pt-8">
+            {item.practiceSentences?.length > 0 ? <div className="space-y-8">{item.practiceSentences.slice(0, 3).map((s, i) => <div key={i} className="flex flex-col items-center gap-2">
+              <p className="text-base text-gray-800 leading-relaxed w-full text-left">{s.replace(/________/g, item.target_word)}</p>
+              <button onClick={(e) => playAudio(e, s.replace(/________/g, item.target_word))} className="min-touch flex items-center justify-center p-2 bg-white/60 hover:bg-white/80 rounded-full transition-colors touch-manipulation touch-feedback" title="播放">
+                <Volume2 size={16} className="text-blue-600" />
               </button>
-              <div className="p-3 bg-white/70 rounded-lg"><p className="text-base text-gray-800 leading-relaxed">{s.replace(/________/g, item.target_word)}</p></div>
             </div>)}</div> :
-             <div className="p-4 bg-white/50 rounded-lg text-center"><p className="text-sm text-gray-500">暂无额外例句</p></div>}
+             <div className="text-center"><p className="text-sm text-gray-500">暂无额外例句</p></div>}
             {item.memory_tip && <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200"><p className="text-xs text-yellow-800 flex items-start gap-1.5"><HelpCircle size={14} className="shrink-0 mt-0.5 text-yellow-600" /><span>{item.memory_tip}</span></p></div>}
           </div>
           <div className="mt-auto pt-3 border-t border-blue-200/50"><div className="flex items-start gap-2"><span className="w-2 h-2 rounded-full bg-green-500/60 mt-1.5 shrink-0" title="原句"></span><p className="text-sm text-gray-700 leading-relaxed">{item.sentence}</p></div></div>

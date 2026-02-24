@@ -7,6 +7,8 @@ import { initializeStorage } from './services/init';
 import { getSupabase } from './lib/supabase';
 import './App.css';
 
+// Build: 2026-02-24 v2
+
 // 懒加载包装器，处理加载失败
 const lazyWithRetry = (importFn, name) => {
   return lazy(() => {

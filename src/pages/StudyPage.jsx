@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import FlipCard from '../components/FlipCard';
-import { X, BookOpen, RotateCcw, Trash2 } from 'lucide-react';
+import { X, RotateCcw, Trash2, FlipHorizontal } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { setTTSEngine, getTTSEngine } from '../services/tts';
 import { useToast } from '../components/Toast';
@@ -136,20 +136,17 @@ function StudyPage() {
         <div className="max-w-[1400px] mx-auto px-4 py-4 safe-area-left safe-area-right">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="bg-blue-500 p-2 rounded-lg min-touch flex items-center justify-center"><BookOpen className="text-white" size={24} /></div>
+              <div className="min-touch flex items-center justify-center text-4xl ml-4">📝</div>
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{record.grade} {record.term}</h1>
-                <p className="text-sm text-gray-500 sm:hidden">{spellingData.total_items} 个单词</p>
+                <h1 className="text-lg sm:text-xl font-bold text-gray-800 truncate">{record.spelling_number || record.spellingNumber || 'Spelling'}</h1>
+                <p className="text-sm text-gray-500 truncate max-w-[200px] sm:max-w-[300px]">{spellingData.subtitle || spellingData.title}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm text-gray-600"><span className="font-medium">{spellingData.total_items}</span> 个单词</p>
-              </div>
-              <button onClick={resetAll} className="min-touch flex items-center justify-center p-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors touch-manipulation touch-feedback" title="重置所有卡片">
-                <RotateCcw size={20} className="text-gray-600" />
+              <button onClick={resetAll} className="min-touch flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation touch-feedback" title="重置所有卡片">
+                <FlipHorizontal size={20} className="text-gray-600" />
               </button>
-              <button onClick={() => navigate('/')} className="min-touch flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation touch-feedback" title="关闭">
+              <button onClick={() => navigate('/')} className="min-touch flex items-center justify-center p-2 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation touch-feedback mr-4" title="关闭">
                 <X size={24} className="text-gray-600" />
               </button>
             </div>
@@ -160,11 +157,6 @@ function StudyPage() {
       {/* Main */}
       <main className="w-full py-6">
         <div className="max-w-[1400px] mx-auto px-4">
-          {/* 标题 */}
-          <div className="mb-6">
-            <h2 className="text-lg font-medium text-gray-700">{spellingData.subtitle || spellingData.title}</h2>
-          </div>
-
           {/* 卡片网格 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5">
             {spellingData.items?.map((item) => (
