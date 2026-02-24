@@ -115,18 +115,17 @@ function LoginPage() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-start px-4 pt-0 pb-8 sm:px-4 sm:py-4 safe-area-left safe-area-right no-horizontal-scroll overflow-y-auto">
       <div className="w-full max-w-sm sm:max-w-2xl mt-0">
-        {/* Logo - 移动端图片更上移 v6 修复居中 */}
+        {/* Logo - 移动端图片 v7 缩小宽度并下移 */}
         <div className="text-center mb-0 sm:mb-2 relative overflow-visible">
           <img 
-            src="/login-banner.jpg?v=6" 
+            src="/login-banner.jpg?v=7" 
             alt="单词听写助手" 
-            className="w-[120%] sm:w-[140%] mb-1 sm:mb-2 rounded-2xl relative block"
+            className="w-full sm:w-[140%] mb-1 sm:mb-2 rounded-2xl relative block"
             style={{
-              marginTop: '-60px',
+              marginTop: '20px',
               position: 'relative',
               left: '50%',
-              transform: 'translateX(-50%)',
-              top: '-20px'
+              transform: 'translateX(-50%)'
             }}
           />
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">单词听写助手</h1>
