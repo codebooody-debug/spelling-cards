@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../components/Toast';
-import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp, LogOut, User, Settings } from 'lucide-react';
+import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp, LogOut, User, Settings, Briefcase } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { extractSpelling } from '../services/api';
 import { getSupabase } from '../lib/supabase';
@@ -138,10 +138,10 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 no-horizontal-scroll">
       <header className="bg-white border-b border-gray-200 safe-area-top">
-        <div className="px-3 sm:px-4 py-3 sm:py-4 safe-area-left safe-area-right">
+        <div className="px-6 sm:px-12 py-3 sm:py-4 safe-area-left safe-area-right">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="text-3xl sm:text-5xl">📚</div>
+              <img src="/icons/icon-180x180.png" alt="单词听写助手" className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl" />
               <div>
                 <h1 className="text-lg sm:text-2xl font-bold text-gray-800">单词听写助手</h1>
                 <p className="text-xs sm:text-sm text-gray-500">{hasRecords ? `已保存 ${studyRecords.length} 个听写记录` : '拍照或上传听写照片开始学习'}</p>
@@ -164,8 +164,11 @@ export default function HomePage() {
             <div className="mb-8 space-y-8">
               {sortedGrades.map((gradeGroup) => (
                 <div key={gradeGroup.grade}>
-                  <div className="sticky top-0 z-10 bg-gray-100 py-3 mb-6">
-                    <h2 className="text-xl font-bold text-gray-800">{gradeGroup.grade}</h2>
+                  <div className="sticky top-0 z-10 bg-gray-100 py-2 mb-4">
+                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                      {gradeGroup.grade === 'P3' && <Briefcase size={20} className="text-blue-500" />}
+                      {gradeGroup.grade}
+                    </h2>
                   </div>
                   <div className="space-y-6">
                     {gradeGroup.terms.map((termGroup) => {
