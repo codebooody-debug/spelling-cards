@@ -128,8 +128,8 @@ function LoginPage() {
               transform: 'translateX(-50%)'
             }}
           />
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">单词听写助手</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">登录以同步你的学习记录</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mt-8 sm:mt-0">单词听写助手</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1 sm:mt-1">登录以同步你的学习记录</p>
         </div>
 
         {/* 登录表单区域 - v11 移动端靠近底部 */}
