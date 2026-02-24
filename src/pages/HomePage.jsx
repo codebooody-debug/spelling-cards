@@ -240,10 +240,12 @@ export default function HomePage() {
                           {isExpanded && (
                             <div className="bg-white divide-y divide-gray-100 mt-2">
                               {termGroup.records.sort((a, b) => {
-                                const numA = parseInt(a.spellingNumber?.replace(/[^\d]/g, '') || '0');
-                                const numB = parseInt(b.spellingNumber?.replace(/[^\d]/g, '') || '0');
-                                if (isNaN(numA) && isNaN(numB)) return (b.spellingNumber || '').localeCompare(a.spellingNumber || '');
-                                if (isNaN(numA)) return 1; if (isNaN(numB)) return -1;
+                                const getNum = (r) => parseInt((r.spelling_number || r.spellingNumber || '0').replace(/[^\d]/g, '') || '0');
+                                const numA = getNum(a);
+                                const numB = getNum(b);
+                                if (isNaN(numA) && isNaN(numB)) return (b.spelling_number || b.spellingNumber || '').localeCompare(a.spelling_number || a.spellingNumber || '');
+                                if (isNaN(numA)) return 1;
+                                if (isNaN(numB)) return -1;
                                 return numB - numA;
                               }).map((record) => (
                                 <div key={record.id} className="flex items-center justify-between py-3 px-6 rounded-lg hover:bg-gray-50 group">
