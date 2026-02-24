@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { getSupabase, isSupabaseConfigured } from '../lib/supabase';
 import { BookOpen, Chrome, Mail } from 'lucide-react';
 
+// Deploy: 2026-02-24 16:55 - Force rebuild
+
 function LoginPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
