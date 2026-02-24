@@ -50,18 +50,35 @@ function LoginPage() {
     try {
       const supabase = getSupabase();
       
-      const { error } = await supabase.auth.signInWithOAuth({
+      // 获取当前 URL（支持 PWA 模式）
+      const currentUrl = window.location.href;
+      const baseUrl = window.location.origin;
+      
+      console.log('[LoginPage] 当前URL:', currentUrl);
+      console.log('[LoginPage] 基础URL:', baseUrl);
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: `${baseUrl}/`,
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         }
       });
 
       if (error) throw error;
+      
+      console.log('[LoginPage] OAuth URL:', data?.url);
+      
       // signInWithOAuth 会自动跳转到 Google
+      if (data?.url) {
+        window.location.href = data.url;
+      }
     } catch (err) {
       console.error('[LoginPage] Google 登录失败:', err);
-      setError(err.message || '登录失败');
+      setError(err.message || '登录失败，请检查 Google OAuth 是否已在 Supabase 中配置');
       setIsLoading(false);
     }
   };
@@ -95,14 +112,16 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8 sm:p-4 safe-area-top safe-area-bottom safe-area-left safe-area-right no-horizontal-scroll">
-      <div className="w-full max-w-sm sm:max-w-md">
+      <div className="w-full max-w-sm sm:max-w-lg">
         {/* Logo */}
-        <div className="text-center mb-6 sm:mb-8 px-2">
-          <img src="/login-banner.jpg" alt="单词听写助手" className="w-full max-w-[280px] sm:max-w-full mx-auto mb-4 rounded-2xl" />
-          <h1 className="text-2xl font-bold text-gray-800">单词听写助手</h1>
-          <p className="text-gray-500 mt-2">登录以同步你的学习记录</p>
+        <div className="text-center mb-0 sm:mb-2 -mt-4 sm:-mt-8">
+          <img src="/login-banner.jpg" alt="单词听写助手" className="w-full mx-auto mb-1 sm:mb-2 rounded-2xl" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800">单词听写助手</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">登录以同步你的学习记录</p>
         </div>
 
+        {/* 登录表单区域 - 整体下移 */}
+        <div className="mt-8 sm:mt-12">
         {/* 错误提示 */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
@@ -111,7 +130,7 @@ function LoginPage() {
         )}
 
         {/* Google 登录 */}
-        <div className="px-1">
+        <div>
           <button
             onClick={handleGoogleLogin}
             disabled={isLoading}
@@ -135,7 +154,7 @@ function LoginPage() {
         </div>
 
         {/* 邮箱登录 */}
-        <form onSubmit={handleEmailLogin} className="w-full px-1">
+        <form onSubmit={handleEmailLogin}>
           <div className="flex gap-2 items-center">
             <div className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${email ? 'w-[calc(100%-84px)]' : 'w-full'}`}>
               <div className="relative">
@@ -163,11 +182,12 @@ function LoginPage() {
         </form>
 
         {/* 说明 */}
-        <div className="mt-6 sm:mt-8 p-4 bg-blue-50 rounded-xl mx-1">
+        <div className="mt-4 sm:mt-6 p-4 bg-blue-50 rounded-xl">
           <p className="text-sm text-blue-700">
             💡 登录后，你的学习记录将自动同步到云端，在任何设备上都能访问。
           </p>
         </div>
+        </div>{/* 登录表单区域结束 */}
       </div>
     </div>
   );
