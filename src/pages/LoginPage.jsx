@@ -117,7 +117,7 @@ function LoginPage() {
       <div className="w-full max-w-sm sm:max-w-2xl">
         {/* Logo - 移动端图片更上移 */}
         <div className="text-center mb-0 sm:mb-2">
-          <img src="/login-banner.jpg" alt="单词听写助手" className="w-[120%] sm:w-[140%] mx-auto -ml-[10%] sm:-ml-[20%] mb-1 sm:mb-2 rounded-2xl -mt-12 sm:-mt-4" />
+          <img src="/login-banner.jpg?v=3" alt="单词听写助手" className="w-[120%] sm:w-[140%] mx-auto -ml-[10%] sm:-ml-[20%] mb-1 sm:mb-2 rounded-2xl -mt-16 sm:-mt-4" />
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">单词听写助手</h1>
           <p className="text-sm sm:text-base text-gray-500 mt-1">登录以同步你的学习记录</p>
         </div>
