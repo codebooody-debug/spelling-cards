@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../components/Toast';
-import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp, LogOut, User, Settings, Briefcase } from 'lucide-react';
+import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp, LogOut, User, Settings, Briefcase, MoreHorizontal } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { extractSpelling } from '../services/api';
 import { getSupabase } from '../lib/supabase';
@@ -13,8 +13,10 @@ export default function HomePage() {
 
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
   const fileInputRef = useRef(null);
   const [user, setUser] = useState(null);
+  const mobileMenuRef = useRef(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -26,6 +28,19 @@ export default function HomePage() {
     };
     getUser();
   }, []);
+
+  // 点击外部关闭移动端菜单
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setShowMobileMenu(false);
+      }
+    };
+    if (showMobileMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showMobileMenu]);
 
   const handleLogout = async () => {
     const supabase = getSupabase();
@@ -147,14 +162,50 @@ export default function HomePage() {
                 <p className="text-[10px] sm:text-sm text-gray-500 hidden sm:block">{hasRecords ? `已保存 ${studyRecords.length} 个听写记录` : '拍照或上传听写照片开始学习'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-1 sm:gap-3">
+            <div className="flex items-center gap-1 sm:gap-3" ref={mobileMenuRef}>
               {user && <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600"><User size={16} /><span className="hidden sm:inline">{user.email}</span></div>}
-              <button onClick={() => navigate('/admin')} className="min-touch flex items-center justify-center p-1.5 sm:p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors touch-manipulation touch-feedback" title="管理面板">
-                <Settings size={18} className="sm:w-5 sm:h-5" />
-              </button>
-              <button onClick={handleLogout} className="min-touch flex items-center justify-center p-1.5 sm:p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors touch-manipulation touch-feedback" title="退出登录">
-                <LogOut size={18} className="sm:w-5 sm:h-5" />
-              </button>
+              
+              {/* 桌面端显示独立按钮 */}
+              <div className="hidden sm:flex items-center gap-2">
+                <button onClick={() => navigate('/admin')} className="min-touch flex items-center justify-center p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors touch-manipulation touch-feedback" title="管理面板">
+                  <Settings size={20} />
+                </button>
+                <button onClick={handleLogout} className="min-touch flex items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors touch-manipulation touch-feedback" title="退出登录">
+                  <LogOut size={20} />
+                </button>
+              </div>
+              
+              {/* 移动端显示菜单按钮 */}
+              <div className="sm:hidden relative">
+                <button 
+                  onClick={() => setShowMobileMenu(!showMobileMenu)} 
+                  className="min-touch flex items-center justify-center p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation touch-feedback"
+                  title="更多"
+                >
+                  <MoreHorizontal size={24} />
+                </button>
+                
+                {/* 移动端下拉菜单 */}
+                {showMobileMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
+                    <button 
+                      onClick={() => { navigate('/admin'); setShowMobileMenu(false); }} 
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Settings size={18} className="text-gray-400" />
+                      <span>设置</span>
+                    </button>
+                    <div className="mx-4 my-1 border-t border-gray-100"></div>
+                    <button 
+                      onClick={() => { handleLogout(); setShowMobileMenu(false); }} 
+                      className="w-full flex items-center gap-3 px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut size={18} className="text-red-400" />
+                      <span>退出登录</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
