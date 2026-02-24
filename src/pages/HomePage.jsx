@@ -138,21 +138,23 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 no-horizontal-scroll">
       <header className="bg-white border-b border-gray-200 safe-area-top">
-        <div className="max-w-[1200px] mx-auto px-6 sm:px-12 py-3 sm:py-4 safe-area-left safe-area-right">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12 py-3 sm:py-4 safe-area-left safe-area-right">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
-              <img src="/icons/icon-180x180.png" alt="单词听写助手" className="w-10 h-10 sm:w-14 sm:h-14 rounded-xl" />
+              <img src="/icons/icon-180x180.png" alt="单词听写助手" className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg" />
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-gray-800">单词听写助手</h1>
-                <p className="text-xs sm:text-sm text-gray-500">{hasRecords ? `已保存 ${studyRecords.length} 个听写记录` : '拍照或上传听写照片开始学习'}</p>
+                <h1 className="text-base sm:text-xl font-bold text-gray-800">单词听写助手</h1>
+                <p className="text-[10px] sm:text-sm text-gray-500 hidden sm:block">{hasRecords ? `已保存 ${studyRecords.length} 个听写记录` : '拍照或上传听写照片开始学习'}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              {user && <div className="flex items-center gap-2 text-sm text-gray-600"><User size={16} /><span className="hidden sm:inline">{user.email}</span></div>}
-              <button onClick={() => navigate('/admin')} className="min-touch flex items-center justify-center p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors touch-manipulation touch-feedback" title="管理面板">
-                <Settings size={20} />
+            <div className="flex items-center gap-1 sm:gap-3">
+              {user && <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600"><User size={16} /><span className="hidden sm:inline">{user.email}</span></div>}
+              <button onClick={() => navigate('/admin')} className="min-touch flex items-center justify-center p-1.5 sm:p-2 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-colors touch-manipulation touch-feedback" title="管理面板">
+                <Settings size={18} className="sm:w-5 sm:h-5" />
               </button>
-              <button onClick={handleLogout} className="min-touch flex items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors touch-manipulation touch-feedback" title="退出登录"><LogOut size={20} /></button>
+              <button onClick={handleLogout} className="min-touch flex items-center justify-center p-1.5 sm:p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors touch-manipulation touch-feedback" title="退出登录">
+                <LogOut size={18} className="sm:w-5 sm:h-5" />
+              </button>
             </div>
           </div>
         </div>
