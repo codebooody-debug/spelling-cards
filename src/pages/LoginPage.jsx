@@ -113,12 +113,12 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-start px-4 pt-0 pb-8 sm:px-4 sm:py-4 safe-area-left safe-area-right no-horizontal-scroll overflow-y-auto">
-      <div className="w-full max-w-sm sm:max-w-2xl mt-0">
-        {/* Logo - 移动端图片 v7 缩小宽度并下移 */}
-        <div className="text-center mb-0 sm:mb-2 relative overflow-visible">
+    <div className="min-h-screen bg-white flex flex-col items-center justify-between px-4 pt-0 pb-8 sm:px-4 sm:py-4 safe-area-left safe-area-right no-horizontal-scroll overflow-y-auto">
+      <div className="w-full max-w-sm sm:max-w-2xl mt-0 flex flex-col flex-1">
+        {/* Logo - 移动端图片 v11 固定在顶部 */}
+        <div className="text-center mb-0 sm:mb-2 relative overflow-visible shrink-0">
           <img 
-            src="/login-banner.jpg?v=8" 
+            src="/login-banner.jpg?v=11" 
             alt="单词听写助手" 
             className="w-[90%] sm:w-[140%] mb-1 sm:mb-2 rounded-2xl relative block"
             style={{
@@ -132,8 +132,8 @@ function LoginPage() {
           <p className="text-sm sm:text-base text-gray-500 mt-1">登录以同步你的学习记录</p>
         </div>
 
-        {/* 登录表单区域 - v10 移动端下移更多 */}
-        <div className="mt-20 sm:mt-16">
+        {/* 登录表单区域 - v11 移动端靠近底部 */}
+        <div className="mt-auto sm:mt-16 mb-4">
         {/* 错误提示 */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
