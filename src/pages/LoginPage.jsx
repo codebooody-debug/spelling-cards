@@ -141,8 +141,8 @@ function LoginPage() {
           </div>
         )}
 
-        {/* Google 登录 */}
-        <div>
+        {/* Google 登录 - v9 统一宽度 */}
+        <div className="w-[90%] mx-auto">
           <button
             onClick={handleGoogleLogin}
             disabled={isLoading}
@@ -159,14 +159,14 @@ function LoginPage() {
         </div>
 
         {/* 分隔线 */}
-        <div className="flex items-center gap-4 my-6">
+        <div className="flex items-center gap-4 my-6 w-[90%] mx-auto">
           <div className="flex-1 h-px bg-gray-200"></div>
           <span className="text-gray-400 text-sm">或</span>
           <div className="flex-1 h-px bg-gray-200"></div>
         </div>
 
-        {/* 邮箱登录 */}
-        <form onSubmit={handleEmailLogin}>
+        {/* 邮箱登录 - v9 统一宽度 */}
+        <form onSubmit={handleEmailLogin} className="w-[90%] mx-auto">
           <div className="flex gap-2 items-center">
             <div className={`transition-all duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] ${email ? 'w-[calc(100%-84px)]' : 'w-full'}`}>
               <div className="relative">
