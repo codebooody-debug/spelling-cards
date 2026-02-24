@@ -106,6 +106,7 @@ function ProtectedRoute({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [error, setError] = useState(null);
+  const location = window.location;
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -115,6 +116,16 @@ function ProtectedRoute({ children }) {
           console.log('[ProtectedRoute] Supabase 未配置');
           setIsLoading(false);
           return;
+        }
+
+        // 检查是否是 OAuth 回调（URL 中有 access_token）
+        const hash = location.hash;
+        const isOAuthCallback = hash && hash.includes('access_token');
+        
+        if (isOAuthCallback) {
+          console.log('[ProtectedRoute] 检测到 OAuth 回调，等待处理...');
+          // 给 Supabase 更多时间来处理 OAuth 回调
+          await new Promise(resolve => setTimeout(resolve, 2000));
         }
 
         // 添加超时机制
@@ -143,10 +154,13 @@ function ProtectedRoute({ children }) {
       const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
         console.log('[ProtectedRoute] Auth 状态变化:', _event, session ? '有session' : '无session');
         setIsAuthenticated(!!session);
+        if (_event === 'SIGNED_IN') {
+          setIsLoading(false);
+        }
       });
       return () => subscription.unsubscribe();
     }
-  }, []);
+  }, [location.hash]);
 
   if (isLoading) return <PageLoader />;
   
