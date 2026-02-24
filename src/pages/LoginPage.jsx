@@ -132,8 +132,8 @@ function LoginPage() {
           <p className="text-sm sm:text-base text-gray-500 mt-1">登录以同步你的学习记录</p>
         </div>
 
-        {/* 登录表单区域 - 整体下移更多 */}
-        <div className="mt-12 sm:mt-16">
+        {/* 登录表单区域 - v10 移动端下移更多 */}
+        <div className="mt-20 sm:mt-16">
         {/* 错误提示 */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
@@ -193,11 +193,13 @@ function LoginPage() {
           <p className="text-xs text-gray-400 mt-2">我们会发送登录链接到你的邮箱</p>
         </form>
 
-        {/* 说明 */}
-        <div className="mt-4 sm:mt-6 p-4 bg-blue-50 rounded-xl">
-          <p className="text-sm text-blue-700">
-            💡 登录后，你的学习记录将自动同步到云端，在任何设备上都能访问。
-          </p>
+        {/* 说明 - v10 移动端统一宽度并下移 */}
+        <div className="w-[90%] sm:w-full mx-auto mt-8 sm:mt-6">
+          <div className="p-4 bg-blue-50 rounded-xl">
+            <p className="text-sm text-blue-700">
+              💡 登录后，你的学习记录将自动同步到云端，在任何设备上都能访问。
+            </p>
+          </div>
         </div>
         </div>{/* 登录表单区域结束 */}
       </div>
