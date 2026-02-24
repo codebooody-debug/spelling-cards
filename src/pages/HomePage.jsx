@@ -211,19 +211,19 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="w-full py-8">
+      <main className="w-full py-4">
         <div className="max-w-[800px] mx-auto px-4">
           {hasRecords ? (
-            <div className="mb-8 space-y-8">
+            <div className="mb-6 space-y-4">
               {sortedGrades.map((gradeGroup) => (
                 <div key={gradeGroup.grade}>
-                  <div className="sticky top-0 z-10 bg-gray-100 py-2 mb-4">
+                  <div className="sticky top-0 z-10 bg-gray-100 py-2 mb-2">
                     <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                       {gradeGroup.grade === 'P3' && <Briefcase size={20} className="text-blue-500" />}
                       {gradeGroup.grade}
                     </h2>
                   </div>
-                  <div className="space-y-6">
+                  <div className="space-y-3">
                     {gradeGroup.terms.map((termGroup) => {
                       const termKey = `${termGroup.grade}-${termGroup.term}`;
                       const isExpanded = expandedTerms[termKey] !== false;
