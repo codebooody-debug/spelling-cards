@@ -128,12 +128,12 @@ function LoginPage() {
               transform: 'translateX(-50%)'
             }}
           />
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mt-8 sm:mt-8">单词听写助手</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1 sm:mt-4">登录以同步你的学习记录</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mt-8 sm:mt-16">单词听写助手</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1 sm:mt-8">登录以同步你的学习记录</p>
         </div>
 
-        {/* 登录表单区域 - v12 桌面端下移更多 */}
-        <div className="mt-auto sm:mt-24 mb-4">
+        {/* 登录表单区域 - v13 桌面端继续下移 */}
+        <div className="mt-auto sm:mt-40 mb-4">
         {/* 错误提示 */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
