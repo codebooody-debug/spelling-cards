@@ -193,8 +193,8 @@ function LoginPage() {
           <p className="text-xs text-gray-400 mt-2">我们会发送登录链接到你的邮箱</p>
         </form>
 
-        {/* 说明 - v10 移动端统一宽度并下移 */}
-        <div className="w-[90%] sm:w-full mx-auto mt-8 sm:mt-6">
+        {/* 说明 - v14 桌面端宽度也统一为90% */}
+        <div className="w-[90%] mx-auto mt-8 sm:mt-6">
           <div className="p-4 bg-blue-50 rounded-xl">
             <p className="text-sm text-blue-700">
               💡 登录后，你的学习记录将自动同步到云端，在任何设备上都能访问。
