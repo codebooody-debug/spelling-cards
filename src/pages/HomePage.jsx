@@ -153,7 +153,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100 no-horizontal-scroll">
       <header className="bg-white border-b border-gray-200 safe-area-top">
-        <div className="max-w-[1200px] mx-auto px-4 sm:px-8 lg:px-12 py-3 sm:py-4 safe-area-left safe-area-right">
+        <div className="max-w-[1200px] mx-auto px-6 sm:px-8 lg:px-12 py-3 sm:py-4 safe-area-left safe-area-right">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 sm:gap-3">
               <img src="/icons/icon-180x180.png" alt="单词听写助手" className="w-9 h-9 sm:w-12 sm:h-12 rounded-lg" />
