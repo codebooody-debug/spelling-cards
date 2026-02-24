@@ -114,10 +114,10 @@ function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 py-8 sm:p-4 safe-area-top safe-area-bottom safe-area-left safe-area-right no-horizontal-scroll">
-      <div className="w-full max-w-sm sm:max-w-xl">
-        {/* Logo - 图片更宽、更上移 */}
+      <div className="w-full max-w-sm sm:max-w-2xl">
+        {/* Logo - 图片超宽、更上移 */}
         <div className="text-center mb-0 sm:mb-2 -mt-8 sm:-mt-16">
-          <img src="/login-banner.jpg" alt="单词听写助手" className="w-[110%] sm:w-[120%] mx-auto -ml-[5%] sm:-ml-[10%] mb-1 sm:mb-2 rounded-2xl" />
+          <img src="/login-banner.jpg" alt="单词听写助手" className="w-[120%] sm:w-[140%] mx-auto -ml-[10%] sm:-ml-[20%] mb-1 sm:mb-2 rounded-2xl" />
           <h1 className="text-xl sm:text-2xl font-bold text-gray-800">单词听写助手</h1>
           <p className="text-sm sm:text-base text-gray-500 mt-1">登录以同步你的学习记录</p>
         </div>
