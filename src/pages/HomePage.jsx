@@ -1,15 +1,15 @@
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { useToast } from '../components/Toast';
-import { Upload, Trash2, Sparkles, ChevronDown, ChevronUp, LogOut, User, Settings, Briefcase, MoreHorizontal } from 'lucide-react';
+import { Upload, Sparkles, ChevronDown, ChevronUp, LogOut, Settings, Briefcase, MoreHorizontal } from 'lucide-react';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { extractSpelling } from '../services/api';
 import { getSupabase } from '../lib/supabase';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { studyRecords, deleteStudyRecord, isLoading } = useApp();
-  const { success, error: showError } = useToast();
+  const { studyRecords, isLoading } = useApp();
+  const { error: showError } = useToast();
 
   const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -134,11 +134,6 @@ export default function HomePage() {
     else showError('请上传图片文件');
   }, [showError]);
 
-  const handleDelete = (e, recordId) => {
-    e.stopPropagation();
-    if (confirm('确定要删除这个听写记录吗？')) { deleteStudyRecord(recordId); success('记录已删除'); }
-  };
-
   const handleStudy = (record) => navigate(`/study/${record.id}`);
 
   if (isLoading) return (
@@ -238,7 +233,7 @@ export default function HomePage() {
                             </div>
                           </button>
                           {isExpanded && (
-                            <div className="bg-white divide-y divide-gray-100 mt-2">
+                            <div className="bg-white mt-2">
                               {termGroup.records.sort((a, b) => {
                                 const getNum = (r) => parseInt((r.spelling_number || r.spellingNumber || '0').replace(/[^\d]/g, '') || '0');
                                 const numA = getNum(a);
@@ -248,8 +243,12 @@ export default function HomePage() {
                                 if (isNaN(numB)) return -1;
                                 return numB - numA;
                               }).map((record) => (
-                                <div key={record.id} className="flex items-center justify-between py-3 px-6 rounded-lg hover:bg-gray-50 group">
-                                  <div onClick={() => handleStudy(record)} className="flex-1 min-w-0 cursor-pointer touch-manipulation">
+                                <div 
+                                  key={record.id} 
+                                  onClick={() => handleStudy(record)}
+                                  className="flex items-center justify-between py-3 px-4 sm:px-6 cursor-pointer touch-manipulation hover:bg-gray-50 transition-colors group"
+                                >
+                                  <div className="flex-1 min-w-0">
                                     <h4 className="text-base font-medium text-gray-800 group-hover:text-gray-900 transition-colors truncate">
                                       {record.spelling_number || record.spellingNumber || 'Spelling'}
                                     </h4>
@@ -257,13 +256,11 @@ export default function HomePage() {
                                       <p className="text-gray-500 mt-0.5 text-sm truncate">{record.content.subtitle}</p>
                                     )}
                                   </div>
-                                  <button 
-                                    onClick={(e) => handleDelete(e, record.id)} 
-                                    className="min-touch flex-shrink-0 flex items-center justify-center p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors touch-manipulation touch-feedback ml-2 opacity-0 group-hover:opacity-100"
-                                    title="删除"
-                                  >
-                                    <Trash2 size={18} />
-                                  </button>
+                                  <div className="flex-shrink-0 ml-2">
+                                    <span className="text-gray-400 group-hover:text-blue-500 transition-colors">
+                                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                    </span>
+                                  </div>
                                 </div>
                               ))}
                             </div>
