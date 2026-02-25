@@ -3,9 +3,9 @@
  * 提供离线缓存、资源预缓存和网络策略
  */
 
-const CACHE_NAME = 'spelling-cards-v1';
-const STATIC_CACHE_NAME = 'spelling-cards-static-v1';
-const IMAGE_CACHE_NAME = 'spelling-cards-images-v1';
+const CACHE_NAME = 'spelling-cards-v2';
+const STATIC_CACHE_NAME = 'spelling-cards-static-v2';
+const IMAGE_CACHE_NAME = 'spelling-cards-images-v2';
 
 // 需要预缓存的核心静态资源
 const STATIC_ASSETS = [
