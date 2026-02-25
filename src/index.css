@@ -218,6 +218,12 @@ html {
   touch-action: pan-x pan-y;
 }
 
+/* 禁用过滚动效果 - 防止页面被拉出边界 */
+html, body {
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+}
+
 /* PWA 全屏模式优化 */
 @media (display-mode: standalone) {
   body {
