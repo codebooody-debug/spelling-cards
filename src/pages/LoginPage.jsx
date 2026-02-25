@@ -10,7 +10,7 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // 检查是否已经登录
+  // 检查是否已经登录，同时处理 OAuth 回调
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -20,19 +20,38 @@ function LoginPage() {
           return;
         }
         
-        const { data: { session }, error } = await supabase.auth.getSession();
+        // 检查 URL 是否有 OAuth 错误
+        const url = new URL(window.location.href);
+        const error = url.searchParams.get('error');
+        const errorDescription = url.searchParams.get('error_description');
         
         if (error) {
-          console.error('[LoginPage] 获取 session 失败:', error);
+          console.error('[LoginPage] OAuth 错误:', error, errorDescription);
+          setError(`登录失败: ${errorDescription || error}`);
+          // 清除 URL 参数
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setIsLoading(false);
+          return;
+        }
+        
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('[LoginPage] 获取 session 失败:', sessionError);
+          setIsLoading(false);
           return;
         }
         
         if (session) {
           console.log('[LoginPage] 已有 session，跳转到首页');
           navigate('/');
+        } else {
+          // 确保重置 loading 状态
+          setIsLoading(false);
         }
       } catch (err) {
         console.error('[LoginPage] 检查 session 失败:', err);
+        setIsLoading(false);
       }
     };
     
